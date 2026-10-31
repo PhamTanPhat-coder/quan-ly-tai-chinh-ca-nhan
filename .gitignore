@@ -147,3 +147,13 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+# --- Bổ sung riêng cho dự án Tài chính & Sổ nợ của bạn ---
+
+# File cơ sở dữ liệu SQLite cá nhân
+*.db
+*.sqlite
+*.sqlite3
+
+# Biến môi trường cục bộ (nếu sau này bạn dùng file .env cho backend)
+backend/.env
+frontend/.env
