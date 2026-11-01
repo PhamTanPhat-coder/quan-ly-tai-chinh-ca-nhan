@@ -5,16 +5,16 @@ const db = new sqlite3.Database("./finance.db", (err) => {
 });
 
 db.serialize(() => {
-  // Bảng Người dùng
+  // ĐÃ THÊM CỘT email UNIQUE
   db.run(`CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     full_name TEXT,
     username TEXT UNIQUE,
+    email TEXT UNIQUE, 
     password TEXT,
     has_setup INTEGER DEFAULT 0
   )`);
 
-  // Bảng Số dư 3 quỹ theo từng user
   db.run(`CREATE TABLE IF NOT EXISTS balances (
     user_id INTEGER PRIMARY KEY,
     spending_balance REAL DEFAULT 0,
@@ -23,7 +23,6 @@ db.serialize(() => {
     FOREIGN KEY(user_id) REFERENCES users(id)
   )`);
 
-  // Bảng Danh mục thu chi
   db.run(`CREATE TABLE IF NOT EXISTS categories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
@@ -31,7 +30,6 @@ db.serialize(() => {
     FOREIGN KEY(user_id) REFERENCES users(id)
   )`);
 
-  // Bảng Giao dịch (Thác nước)
   db.run(`CREATE TABLE IF NOT EXISTS transactions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
@@ -43,7 +41,6 @@ db.serialize(() => {
     FOREIGN KEY(category_id) REFERENCES categories(id)
   )`);
 
-  // Bảng Quản lý Sổ Nợ (Đã có đầy đủ ngày mượn và ngày trả)
   db.run(`CREATE TABLE IF NOT EXISTS debts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,

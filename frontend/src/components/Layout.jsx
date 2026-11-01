@@ -14,10 +14,12 @@ export default function Layout() {
     navigate("/login");
   };
 
+  // ĐÃ BỔ SUNG TRANG CÀI ĐẶT VÀO DANH SÁCH MENU DƯỚI ĐÂY
   const menuItems = [
     { path: "/", label: "📊 Tổng quan & Thu Chi" },
     { path: "/debts", label: "📒 Quản lý Sổ Nợ" },
     { path: "/reports", label: "📈 Báo cáo Thống kê" },
+    { path: "/settings", label: "⚙️ Cài Đặt Hệ Thống" },
   ];
 
   return (

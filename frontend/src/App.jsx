@@ -12,6 +12,7 @@ import SetupFunds from "./pages/SetupFunds";
 import Dashboard from "./pages/Dashboard";
 import Debts from "./pages/Debts";
 import Reports from "./pages/Reports";
+import Settings from "./pages/Settings"; // Bổ sung import Settings
 
 const ProtectedRoute = ({ children }) => {
   const isAuth = localStorage.getItem("isAuth") === "true";
@@ -51,6 +52,7 @@ export default function App() {
           <Route index element={<Dashboard />} />
           <Route path="debts" element={<Debts />} />
           <Route path="reports" element={<Reports />} />
+          <Route path="settings" element={<Settings />} /> {/* Route mới */}
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

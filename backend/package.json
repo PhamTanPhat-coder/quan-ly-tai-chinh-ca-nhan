@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "main": "server.js",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "express": "^4.22.3",
     "node-cron": "^4.6.0",
+    "nodemailer": "^10.3.1",
     "sqlite3": "^5.1.7"
   },
   "scripts": {
