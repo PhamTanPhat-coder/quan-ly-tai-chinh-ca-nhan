@@ -8,22 +8,25 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 export default function Reports() {
   const userId = localStorage.getItem("userId");
   const [transactions, setTransactions] = useState([]);
+  const [balances, setBalances] = useState(null); // Thêm state balances để AI phân tích
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [filterMode, setFilterMode] = useState("month");
+  const [filterMode, setFilterMode] = useState("today");
 
   useEffect(() => {
-    axios
-      .get(`http://localhost:5000/api/transactions/${userId}`)
-      .then((res) => {
-        setTransactions(res.data);
-        handleQuickFilter("month"); // Mặc định hiển thị tháng này
-      });
+    // Gọi song song cả giao dịch và số dư quỹ để phân tích
+    Promise.all([
+      axios.get(`http://localhost:5000/api/transactions/${userId}`),
+      axios.get(`http://localhost:5000/api/balances/${userId}`),
+    ]).then(([transRes, balRes]) => {
+      setTransactions(transRes.data);
+      setBalances(balRes.data);
+      handleQuickFilter("today");
+    });
   }, [userId]);
 
   const formatMoney = (val) => Number(val || 0).toLocaleString("vi-VN");
 
-  // Hàm xử lý lọc nhanh chuẩn xác theo giờ địa phương
   const handleQuickFilter = (mode) => {
     setFilterMode(mode);
     const now = new Date();
@@ -34,7 +37,7 @@ export default function Reports() {
       start.setHours(0, 0, 0, 0);
       end.setHours(23, 59, 59, 999);
     } else if (mode === "week") {
-      start.setDate(now.getDate() - 6); // Lùi lại 6 ngày trước + hôm nay = đúng 7 ngày
+      start.setDate(now.getDate() - 6);
       start.setHours(0, 0, 0, 0);
       end.setHours(23, 59, 59, 999);
     } else if (mode === "month") {
@@ -46,19 +49,14 @@ export default function Reports() {
     setEndDate(end.toISOString().split("T")[0]);
   };
 
-  // Lọc giao dịch chính xác theo khoảng ngày được chọn
   const filteredTransactions = transactions.filter((t) => {
     if (!startDate && !endDate) return true;
-
-    // Cắt chuỗi lấy phần ngày YYYY-MM-DD của giao dịch để so sánh an toàn không lệch múi giờ
     const tDateStr = t.transaction_date ? t.transaction_date.split("T")[0] : "";
-
     if (startDate && tDateStr < startDate) return false;
     if (endDate && tDateStr > endDate) return false;
     return true;
   });
 
-  // Gom nhóm dữ liệu biểu đồ tròn
   const categoryTotals = {};
   filteredTransactions.forEach((t) => {
     const cat = t.category_name || "Khác";
@@ -82,6 +80,69 @@ export default function Reports() {
     ],
   };
 
+  // TÍNH TOÁN LOGIC AI PHÂN TÍCH (NGÂN SÁCH ĐỘNG)
+  const renderAIAnalysis = () => {
+    if (filteredTransactions.length === 0) {
+      return (
+        <p className="text-sm text-amber-800">
+          Chưa ghi nhận giao dịch nào trong khoảng thời gian được chọn.
+        </p>
+      );
+    }
+
+    const totalSpent = filteredTransactions.reduce(
+      (sum, t) => sum + t.amount,
+      0,
+    );
+    let aiMessage = "";
+    let isWarning = false;
+
+    if (filterMode === "today" && balances) {
+      const now = new Date();
+      const lastDayOfMonth = new Date(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        0,
+      ).getDate();
+      const currentDay = now.getDate();
+      const remainingDays = lastDayOfMonth - currentDay + 1;
+
+      // Ngân sách gốc của hôm nay = (Số dư chi tiêu hiện tại + Số tiền đã tiêu hôm nay) / Số ngày còn lại
+      const originalTodayBudget =
+        (balances.spending_balance + totalSpent) / remainingDays;
+
+      if (totalSpent > originalTodayBudget) {
+        isWarning = true;
+        const overspent = totalSpent - originalTodayBudget;
+        aiMessage = `Hôm nay bạn đã tiêu lố ${formatMoney(overspent)}đ so với ngân sách cho phép. Hệ thống đã tự động trừ bớt hạn mức của các ngày còn lại để cân bằng. Hãy thắt chặt chi tiêu vào ngày mai nhé!`;
+      } else {
+        const saved = originalTodayBudget - totalSpent;
+        aiMessage = `Tuyệt vời! Hôm nay bạn tiêu dưới hạn mức, giúp dư ra ${formatMoney(saved)}đ. Số tiền này đã được chia đều cộng thêm vào hạn mức cho các ngày tới.`;
+      }
+    } else {
+      aiMessage = `✅ Nguyên tắc phân bổ dòng tiền thác nước đang hoạt động ổn định. Tổng cộng có ${filteredTransactions.length} giao dịch được ghi nhận.`;
+    }
+
+    return (
+      <div className="space-y-3 text-sm font-medium">
+        <p className="text-amber-900">
+          💸 Tổng chi tiêu trong kỳ:{" "}
+          <span className="font-black text-rose-600">
+            {formatMoney(totalSpent)} đ
+          </span>
+        </p>
+        <p
+          className={
+            isWarning ? "text-rose-700 font-bold" : "text-emerald-700 font-bold"
+          }
+        >
+          {isWarning ? "⚠️ " : "💡 "}
+          {aiMessage}
+        </p>
+      </div>
+    );
+  };
+
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-3xl shadow-sm border gap-4">
@@ -95,7 +156,6 @@ export default function Reports() {
           </p>
         </div>
 
-        {/* Các nút lọc nhanh và tùy chỉnh Từ ngày ... Đến ngày ... */}
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => handleQuickFilter("today")}
@@ -115,7 +175,6 @@ export default function Reports() {
           >
             Tháng này
           </button>
-
           <div className="flex items-center gap-1 text-xs font-semibold ml-2">
             <span>Từ:</span>
             <input
@@ -141,7 +200,6 @@ export default function Reports() {
         </div>
       </div>
 
-      {/* BIỂU ĐỒ TRÒN & AI PHÂN TÍCH */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="bg-white p-8 rounded-3xl shadow-sm border flex flex-col items-center justify-center">
           <h2 className="font-black text-slate-800 mb-6 w-full text-left">
@@ -162,27 +220,10 @@ export default function Reports() {
           <h2 className="font-black text-amber-900 text-lg flex items-center gap-2">
             <span>🤖</span> AI Phân Tích & Cảnh Báo Bất Thường
           </h2>
-          {filteredTransactions.length === 0 ? (
-            <p className="text-sm text-amber-800">
-              Chưa ghi nhận giao dịch nào trong khoảng thời gian được chọn.
-            </p>
-          ) : (
-            <div className="space-y-3 text-sm text-amber-900 font-medium">
-              <p>
-                ⚠️ Hệ thống ghi nhận có tổng cộng{" "}
-                <strong>{filteredTransactions.length} giao dịch</strong> trong
-                khoảng thời gian này.
-              </p>
-              <p>
-                ✅ Nguyên tắc phân bổ dòng tiền thác nước đang hoạt động ổn
-                định, bảo vệ tốt các quỹ dự phòng.
-              </p>
-            </div>
-          )}
+          {renderAIAnalysis()}
         </div>
       </div>
 
-      {/* DANH SÁCH CHI TIẾT GIAO DỊCH THEO KHOẢNG THỜI GIAN ĐƯỢC CHỌN */}
       <div className="bg-white p-8 rounded-3xl shadow-sm border space-y-4">
         <h2 className="text-lg font-black text-slate-900">
           📜 Danh Sách Giao Dịch Chi Tiết Trong Khoảng Thời Gian Đã Chọn

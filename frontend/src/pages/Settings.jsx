@@ -18,7 +18,8 @@ export default function Settings() {
       await axios.delete(`http://localhost:5000/api/reset-data/${userId}`);
       alert("Đã reset toàn bộ dữ liệu hệ thống về 0 thành công.");
       localStorage.setItem("hasSetup", "false");
-      navigate("/setup");
+      // Ép trình duyệt tải lại toàn bộ trang web để dọn sạch state cũ, chuyển hướng về setup
+      window.location.href = "/setup";
     } catch (err) {
       alert("Lỗi khi xóa dữ liệu: " + err.message);
     }

@@ -16,12 +16,10 @@ app.post("/api/register", (req, res) => {
   const passwordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
   if (!passwordRegex.test(password)) {
-    return res
-      .status(400)
-      .json({
-        error:
-          "Mật khẩu yếu: Phải từ 8 ký tự trở lên, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt!",
-      });
+    return res.status(400).json({
+      error:
+        "Mật khẩu yếu: Phải từ 8 ký tự trở lên, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt!",
+    });
   }
 
   db.run(
@@ -86,7 +84,39 @@ app.get("/api/debts/:userId", controllers.getDebts);
 app.post("/api/debts", controllers.addDebt);
 app.put("/api/debts/:id/status", controllers.updateDebtStatus);
 app.delete("/api/debts/:id", controllers.deleteDebt);
+// ================= CRON JOB: KẾT TOÁN TỰ ĐỘNG CUỐI THÁNG =================
+const cron = require("node-cron");
 
+// Chạy vào lúc 23:59 mỗi ngày để kiểm tra
+cron.schedule("59 23 * * *", () => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  // Nếu ngày mai là mùng 1 (tức là hôm nay là ngày cuối cùng của tháng)
+  if (tomorrow.getDate() === 1) {
+    console.log(
+      "Tiến hành kết toán cuối tháng: Chuyển tiền dư vào quỹ tiết kiệm...",
+    );
+
+    // Tìm tất cả user có tiền dư trong quỹ chi tiêu
+    db.all(
+      `SELECT * FROM balances WHERE spending_balance > 0`,
+      [],
+      (err, rows) => {
+        if (err) return console.error(err);
+
+        rows.forEach((row) => {
+          const newSavings = row.savings_balance + row.spending_balance;
+          // Chuyển toàn bộ spending_balance sang savings_balance, đưa spending về 0
+          db.run(
+            `UPDATE balances SET savings_balance = ?, spending_balance = 0 WHERE user_id = ?`,
+            [newSavings, row.user_id],
+          );
+        });
+      },
+    );
+  }
+});
 app.listen(5000, () => {
   console.log("Backend đang chạy trên cổng 5000");
 });
