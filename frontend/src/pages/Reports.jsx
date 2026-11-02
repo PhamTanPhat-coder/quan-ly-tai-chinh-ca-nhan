@@ -125,7 +125,6 @@ export default function Reports() {
     const items = [];
 
     lines.forEach((line, index) => {
-      // Bỏ đi các số thứ tự, gạch đầu dòng (vd: "1. ", "- ", "* ")
       let cleanLine = line.replace(/^[\d.\-\*]+\s*/, "");
       let type = "default";
       let icon = "💡";
@@ -134,7 +133,6 @@ export default function Reports() {
 
       const lowerLine = cleanLine.toLowerCase();
 
-      // Dựa vào từ khóa để phân loại giao diện Card
       if (lowerLine.includes("ngân sách") || lowerLine.includes("tiêu lố")) {
         type = "budget";
         icon = "💰";
@@ -163,7 +161,6 @@ export default function Reports() {
         title = `Phân tích ${index + 1}`;
       }
 
-      // Xóa phần tiêu đề dư thừa do AI sinh ra (vd: "Ngân sách: ") để tránh lặp từ
       let content = cleanLine.replace(
         /^\*\*(Ngân sách|Giá cả|Sức khỏe|Nợ nần|Giá cả giao dịch)[^:]*:?\*\*\s*/i,
         "",
@@ -172,8 +169,6 @@ export default function Reports() {
         /^(Ngân sách|Giá cả|Sức khỏe|Nợ nần|Giá cả giao dịch)[^:]*:\s*/i,
         "",
       );
-
-      // In đậm phần còn lại nếu AI có nhấn mạnh
       content = content.replace(
         /\*\*(.*?)\*\*/g,
         '<strong class="text-white font-bold">$1</strong>',
@@ -181,8 +176,27 @@ export default function Reports() {
 
       items.push({ id: Math.random(), type, icon, title, colorClass, content });
     });
-
     return items;
+  };
+
+  const getCategoryIcon = (name) => {
+    const icons = {
+      "Ăn uống": "🍚",
+      "Hóa đơn & Dịch vụ": "🧾",
+      "Nhà cửa": "🏠",
+      "Di chuyển": "🛵",
+      "Giải trí": "🎮",
+      "Mua sắm cá nhân": "🛍️",
+      "Giao lưu / Hẹn hò": "🍻",
+      "Hiếu hỉ & Quà tặng": "🎁",
+      "Mua sắm": "🛒",
+      "Tiện ích số & Phần mềm": "💻",
+      "Thiết bị Công nghệ": "🎧",
+      "Sức khỏe / Y tế": "💊",
+      "Học tập & Phát triển": "📚",
+      "Bảo hiểm / Tiết kiệm": "🛡️",
+    };
+    return icons[name] || "📌";
   };
 
   const categoryTotals = {};
@@ -198,15 +212,43 @@ export default function Reports() {
     else totalOwedToMe += d.amount;
   });
 
-  const mergedChartLabels = [
-    ...Object.keys(categoryTotals),
-    "Nợ người ta",
-    "Cho mượn",
-  ];
-  const mergedChartData = [
-    ...Object.values(categoryTotals),
-    totalIOwe,
-    totalOwedToMe,
+  // Chỉ lấy các danh mục chi tiêu thông thường
+  const mergedChartLabels = [...Object.keys(categoryTotals)];
+  const mergedChartData = [...Object.values(categoryTotals)];
+
+  // Nếu có nợ người ta (> 0) thì mới đẩy vào biểu đồ
+  if (totalIOwe > 0) {
+    mergedChartLabels.push("Nợ người ta");
+    mergedChartData.push(totalIOwe);
+  }
+
+  // Nếu có người khác nợ mình (> 0) thì mới đẩy vào biểu đồ
+  if (totalOwedToMe > 0) {
+    mergedChartLabels.push("Cho mượn");
+    mergedChartData.push(totalOwedToMe);
+  }
+  // THÊM BẢNG MÀU ĐỘNG CHO 20 DANH MỤC
+  const chartColors = [
+    "#3B82F6",
+    "#10B981",
+    "#F59E0B",
+    "#8B5CF6",
+    "#EF4444",
+    "#06B6D4",
+    "#F43F5E",
+    "#EAB308",
+    "#6366f1",
+    "#14b8a6",
+    "#f97316",
+    "#d946ef",
+    "#84cc16",
+    "#64748b",
+    "#a855f7",
+    "#fbbf24",
+    "#34d399",
+    "#f87171",
+    "#38bdf8",
+    "#fb923c",
   ];
 
   const doughnutData = {
@@ -214,16 +256,7 @@ export default function Reports() {
     datasets: [
       {
         data: mergedChartData,
-        backgroundColor: [
-          "#3B82F6",
-          "#10B981",
-          "#F59E0B",
-          "#8B5CF6",
-          "#EF4444",
-          "#06B6D4",
-          "#F43F5E",
-          "#EAB308",
-        ],
+        backgroundColor: chartColors.slice(0, mergedChartLabels.length),
         borderWidth: 0,
       },
     ],
@@ -364,9 +397,8 @@ export default function Reports() {
         </div>
       </div>
 
-      {/* 🌟 GIAO DIỆN NHẬN ĐỊNH AI MỚI - CHUYÊN NGHIỆP & HIỆN ĐẠI 🌟 */}
+      {/* 🌟 GIAO DIỆN NHẬN ĐỊNH AI */}
       <div className="bg-[#0f172a] p-6 md:p-8 rounded-[2rem] shadow-2xl relative overflow-hidden">
-        {/* Background Hiệu ứng Ánh sáng */}
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -418,39 +450,70 @@ export default function Reports() {
         )}
       </div>
 
-      {/* LỊCH SỬ GIAO DỊCH */}
+      {/* LỊCH SỬ GIAO DỊCH LÀM LẠI CHO ĐỒNG BỘ */}
       <div className="bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-100 space-y-4">
-        <h2 className="text-lg font-black text-slate-900">
-          📜 Lịch Sử Giao Dịch
+        <h2 className="text-lg font-black text-slate-900 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-600 border border-slate-200">
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M4 6h16M4 10h16M4 14h16M4 18h16"
+              />
+            </svg>
+          </div>
+          Lịch Sử Giao Dịch
         </h2>
         <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full text-left border-collapse min-w-[600px]">
             <thead>
-              <tr className="border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                <th className="pb-4">Thời gian</th>
-                <th className="pb-4">Danh mục</th>
-                <th className="pb-4">Ghi chú</th>
-                <th className="pb-4 text-right">Số tiền</th>
+              <tr className="border-b-2 border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                <th className="pb-4 font-semibold">Thời gian</th>
+                <th className="pb-4 font-semibold">Danh mục</th>
+                <th className="pb-4 font-semibold">Ghi chú</th>
+                <th className="pb-4 text-right font-semibold">Số tiền</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50 text-sm">
               {filteredTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="py-12 text-center text-slate-400">
-                    Chưa ghi nhận khoản chi nào.
+                  <td colSpan="4" className="py-16 text-center">
+                    <div className="flex flex-col items-center justify-center opacity-70">
+                      <span className="text-4xl mb-3">📭</span>
+                      <p className="text-slate-800 font-bold text-base">
+                        Chưa có giao dịch
+                      </p>
+                    </div>
                   </td>
                 </tr>
               ) : (
                 filteredTransactions.map((t) => (
-                  <tr key={t.id} className="hover:bg-slate-50 transition">
+                  <tr
+                    key={t.id}
+                    className="hover:bg-slate-50/60 transition-colors"
+                  >
                     <td className="py-4 text-slate-500 font-medium">
-                      {new Date(t.transaction_date).toLocaleDateString("vi-VN")}
+                      {new Date(t.transaction_date).toLocaleDateString(
+                        "vi-VN",
+                        { day: "2-digit", month: "2-digit", year: "numeric" },
+                      )}
                     </td>
-                    <td className="py-4 font-bold text-slate-800">
-                      {t.category_name}
+                    <td className="py-4">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200/60">
+                        <span>{getCategoryIcon(t.category_name)}</span>{" "}
+                        {t.category_name}
+                      </span>
                     </td>
-                    <td className="py-4 text-slate-500 text-xs italic">
-                      {t.note || "—"}
+                    <td className="py-4 text-slate-500 font-medium">
+                      {t.note || (
+                        <span className="text-slate-300 italic">—</span>
+                      )}
                     </td>
                     <td className="py-4 text-right font-black text-rose-600">
                       -{formatMoney(t.amount)} đ
@@ -463,7 +526,7 @@ export default function Reports() {
         </div>
       </div>
 
-      {/* CHATBOT WIDGET */}
+      {/* CHATBOT WIDGET (GIỮ NGUYÊN) */}
       <button
         onClick={() => setIsChatOpen(!isChatOpen)}
         className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-2xl shadow-blue-600/40 hover:scale-110 transition-transform z-50"
@@ -514,7 +577,6 @@ export default function Reports() {
               </p>
             </div>
           </div>
-
           <div className="flex-1 p-4 overflow-y-auto bg-slate-50 space-y-4 custom-scrollbar">
             {chatHistory.map((msg, idx) => (
               <div
@@ -549,7 +611,6 @@ export default function Reports() {
             )}
             <div ref={chatEndRef} />
           </div>
-
           <form
             onSubmit={handleChatAI}
             className="p-3 bg-white border-t border-slate-100 flex gap-2"

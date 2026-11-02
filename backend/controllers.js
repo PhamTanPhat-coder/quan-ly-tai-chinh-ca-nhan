@@ -450,17 +450,36 @@ exports.registerUser = async (req, res) => {
     );
     const userId = result.lastID;
 
-    // Khởi tạo quỹ và danh mục mặc định
+    // Khởi tạo quỹ mặc định
     await run(
       `INSERT INTO balances (user_id, spending_balance, savings_balance, emergency_balance) VALUES (?, 0, 0, 0)`,
       [userId],
     );
-    await run(`INSERT INTO categories (user_id, name) VALUES (?, 'Mua sắm')`, [
-      userId,
-    ]);
-    await run(`INSERT INTO categories (user_id, name) VALUES (?, 'Ăn uống')`, [
-      userId,
-    ]);
+
+    // Tự động thêm 14 danh mục chuyên nghiệp cho User mới
+    const defaultCategories = [
+      "Ăn uống",
+      "Hóa đơn & Dịch vụ",
+      "Nhà cửa",
+      "Di chuyển",
+      "Giải trí",
+      "Mua sắm cá nhân",
+      "Giao lưu / Hẹn hò",
+      "Hiếu hỉ & Quà tặng",
+      "Tiện ích số & Phần mềm",
+      "Thiết bị Công nghệ",
+      "Sức khỏe / Y tế",
+      "Học tập & Phát triển",
+      "Bảo hiểm / Tiết kiệm",
+      "Khác",
+    ];
+
+    for (const cat of defaultCategories) {
+      await run(`INSERT INTO categories (user_id, name) VALUES (?, ?)`, [
+        userId,
+        cat,
+      ]);
+    }
 
     res.json({ message: "Đăng ký thành công" });
   } catch (error) {

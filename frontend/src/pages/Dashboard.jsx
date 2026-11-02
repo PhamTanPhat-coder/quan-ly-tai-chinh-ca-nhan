@@ -23,6 +23,9 @@ export default function Dashboard() {
     fromEmergency: 0,
   });
 
+  // State quản lý việc hiển thị Bảng chọn Danh mục (Modal)
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+
   const formatMoney = (val) => {
     if (!val && val !== 0) return "0";
     return Number(val).toLocaleString("vi-VN");
@@ -94,7 +97,70 @@ export default function Dashboard() {
     originalBudgetForToday > 0
       ? Math.min(Math.round((spentToday / originalBudgetForToday) * 100), 100)
       : 0;
-  // ========================================================================
+
+  // ================= PHÂN NHÓM DANH MỤC =================
+  const essentialCats = categories.filter((c) =>
+    ["Ăn uống", "Hóa đơn & Dịch vụ", "Nhà cửa", "Di chuyển"].includes(c.name),
+  );
+  const lifestyleCats = categories.filter((c) =>
+    [
+      "Giải trí",
+      "Mua sắm cá nhân",
+      "Giao lưu / Hẹn hò",
+      "Hiếu hỉ & Quà tặng",
+      "Mua sắm",
+    ].includes(c.name),
+  );
+  const techCats = categories.filter((c) =>
+    ["Tiện ích số & Phần mềm", "Thiết bị Công nghệ"].includes(c.name),
+  );
+  const healthCats = categories.filter((c) =>
+    [
+      "Sức khỏe / Y tế",
+      "Học tập & Phát triển",
+      "Bảo hiểm / Tiết kiệm",
+    ].includes(c.name),
+  );
+  const otherCats = categories.filter(
+    (c) =>
+      ![
+        "Ăn uống",
+        "Hóa đơn & Dịch vụ",
+        "Nhà cửa",
+        "Di chuyển",
+        "Giải trí",
+        "Mua sắm cá nhân",
+        "Giao lưu / Hẹn hò",
+        "Hiếu hỉ & Quà tặng",
+        "Mua sắm",
+        "Tiện ích số & Phần mềm",
+        "Thiết bị Công nghệ",
+        "Sức khỏe / Y tế",
+        "Học tập & Phát triển",
+        "Bảo hiểm / Tiết kiệm",
+      ].includes(c.name),
+  );
+
+  const getCategoryIcon = (name) => {
+    const icons = {
+      "Ăn uống": "🍚",
+      "Hóa đơn & Dịch vụ": "🧾",
+      "Nhà cửa": "🏠",
+      "Di chuyển": "🛵",
+      "Giải trí": "🎮",
+      "Mua sắm cá nhân": "🛍️",
+      "Giao lưu / Hẹn hò": "🍻",
+      "Hiếu hỉ & Quà tặng": "🎁",
+      "Mua sắm": "🛒",
+      "Tiện ích số & Phần mềm": "💻",
+      "Thiết bị Công nghệ": "🎧",
+      "Sức khỏe / Y tế": "💊",
+      "Học tập & Phát triển": "📚",
+      "Bảo hiểm / Tiết kiệm": "🛡️",
+    };
+    return icons[name] || "📌";
+  };
+  // =======================================================
 
   const handleEditFundDirectly = async (fundKey, fundTitle) => {
     const currentVal = balances[fundKey];
@@ -246,7 +312,6 @@ export default function Dashboard() {
           takeSavings = balances.savings_balance;
           takeEmergency = deficit - takeSavings;
         }
-
         setPopupData({
           needed: parseFloat(amount),
           fromSavings: takeSavings,
@@ -285,13 +350,100 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="relative min-h-screen bg-slate-100 overflow-hidden text-slate-800">
-      {/* BACKGROUND MESH GRADIENT (Kính mờ siêu đẹp) */}
+    <div className="relative min-h-screen bg-slate-50 overflow-hidden text-slate-800">
+      {/* BACKGROUND MESH GRADIENT */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-400/20 rounded-full blur-[100px] pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-400/20 rounded-full blur-[100px] pointer-events-none"></div>
 
       <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-5 md:space-y-8 relative z-10">
-        {/* POP-UP CẢNH BÁO */}
+        {/* ================= MODAL CHỌN DANH MỤC (THAY THẾ DROP DOWN) ================= */}
+        {showCategoryModal && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100] transition-all">
+            <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-fade-in-up">
+              <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
+                  <span className="text-xl">🏷️</span> Chọn danh mục chi tiêu
+                </h3>
+                <button
+                  onClick={() => setShowCategoryModal(false)}
+                  className="w-8 h-8 flex items-center justify-center bg-slate-200 hover:bg-slate-300 rounded-full text-slate-600 transition"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="p-5 overflow-y-auto custom-scrollbar space-y-6 flex-1">
+                {/* Render từng nhóm Danh Mục */}
+                {[
+                  {
+                    title: "1. Nhóm Thiết Yếu",
+                    data: essentialCats,
+                    color: "text-blue-600",
+                    bg: "bg-blue-50 border-blue-100 hover:border-blue-300",
+                  },
+                  {
+                    title: "2. Nhóm Lối Sống",
+                    data: lifestyleCats,
+                    color: "text-emerald-600",
+                    bg: "bg-emerald-50 border-emerald-100 hover:border-emerald-300",
+                  },
+                  {
+                    title: "3. Nhóm Công Nghệ",
+                    data: techCats,
+                    color: "text-indigo-600",
+                    bg: "bg-indigo-50 border-indigo-100 hover:border-indigo-300",
+                  },
+                  {
+                    title: "4. Sức Khỏe & Tương lai",
+                    data: healthCats,
+                    color: "text-rose-600",
+                    bg: "bg-rose-50 border-rose-100 hover:border-rose-300",
+                  },
+                  {
+                    title: "Khác",
+                    data: otherCats,
+                    color: "text-slate-600",
+                    bg: "bg-slate-50 border-slate-200 hover:border-slate-300",
+                  },
+                ].map(
+                  (group, idx) =>
+                    group.data.length > 0 && (
+                      <div key={idx}>
+                        <h4
+                          className={`text-xs font-bold uppercase tracking-wider mb-3 ${group.color}`}
+                        >
+                          {group.title}
+                        </h4>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                          {group.data.map((cat) => (
+                            <button
+                              key={cat.id}
+                              type="button"
+                              onClick={() => {
+                                setCategoryId(cat.id);
+                                setShowCategoryModal(false);
+                              }}
+                              className={`flex items-center gap-2 p-3 rounded-xl border text-left transition-all ${group.bg} ${categoryId === cat.id ? "ring-2 ring-blue-500 shadow-md scale-[1.02]" : ""}`}
+                            >
+                              <span className="text-xl">
+                                {getCategoryIcon(cat.name)}
+                              </span>
+                              <span className="font-semibold text-slate-700 text-sm truncate">
+                                {cat.name}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ),
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+        {/* ========================================================================= */}
+
+        {/* POP-UP CẢNH BÁO HỤT QUỸ (Giữ nguyên) */}
         {showPopup && (
           <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 z-50 transition-opacity">
             <div className="bg-white/90 backdrop-blur-2xl p-6 md:p-8 rounded-[2rem] max-w-lg w-full shadow-2xl border border-white/20 flex flex-col items-center text-center">
@@ -353,9 +505,9 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* TẦNG 1: 3 QUỸ THÁC NƯỚC (PREMIUM DARK CARDS) */}
+        {/* TẦNG 1: 3 QUỸ THÁC NƯỚC (GIỮ NGUYÊN VÌ ĐÃ ĐẸP) */}
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {/* Quỹ Chi Tiêu (Thẻ Tín Dụng Xanh Tím) */}
+          {/* Quỹ Chi Tiêu */}
           <div className="col-span-1 bg-gradient-to-br from-blue-700 via-indigo-800 to-blue-900 p-5 md:p-7 rounded-[2rem] shadow-xl shadow-blue-900/20 text-white flex flex-col justify-between relative overflow-hidden group">
             <svg
               className="absolute top-0 right-0 w-32 h-32 text-white/5 transform translate-x-8 -translate-y-8 group-hover:scale-110 transition-transform duration-500"
@@ -371,7 +523,6 @@ export default function Dashboard() {
             >
               <polygon points="50,0 100,100 0,100" />
             </svg>
-
             <div className="relative z-10 flex justify-between items-center mb-4">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
@@ -440,7 +591,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Quỹ Tiết Kiệm (Thẻ Ngọc Lục Bảo) */}
+          {/* Quỹ Tiết Kiệm */}
           <div className="col-span-1 bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-900 p-5 md:p-7 rounded-[2rem] shadow-xl shadow-emerald-900/20 text-white flex flex-col justify-between relative overflow-hidden group">
             <svg
               className="absolute top-0 right-0 w-40 h-40 text-white/5 transform translate-x-12 -translate-y-4 group-hover:rotate-12 transition-transform duration-700"
@@ -455,7 +606,6 @@ export default function Dashboard() {
                 d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-
             <div className="relative z-10 flex justify-between items-center mb-4">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
@@ -524,7 +674,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Quỹ Khẩn Cấp (Thẻ Ruby Đỏ Đen) */}
+          {/* Quỹ Khẩn Cấp */}
           <div className="col-span-2 lg:col-span-1 bg-gradient-to-br from-rose-700 via-rose-900 to-black p-5 md:p-7 rounded-[2rem] shadow-xl shadow-rose-900/30 text-white flex flex-col justify-between relative overflow-hidden group">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent opacity-50"></div>
             <svg
@@ -534,7 +684,6 @@ export default function Dashboard() {
             >
               <polygon points="0,100 100,0 100,100" />
             </svg>
-
             <div className="relative z-10 flex justify-between items-center mb-4">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-full bg-rose-500/30 backdrop-blur-md flex items-center justify-center border border-rose-400/30">
@@ -589,9 +738,8 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* TẦNG 2: NGÂN SÁCH ĐỘNG & TỔNG TÀI SẢN */}
+        {/* TẦNG 2: NGÂN SÁCH ĐỘNG & TỔNG TÀI SẢN (GIỮ NGUYÊN) */}
         <div className="grid grid-cols-2 gap-4 md:gap-6">
-          {/* Thẻ Ngân Sách Động (Glassmorphism sáng) */}
           {isOverspent ? (
             <div className="col-span-2 bg-gradient-to-br from-rose-50 to-orange-50 border border-rose-200 p-5 md:p-6 rounded-[2rem] flex flex-col justify-center relative shadow-lg shadow-rose-100/50">
               <div className="flex items-center gap-2 mb-3">
@@ -648,7 +796,6 @@ export default function Dashboard() {
                 {formatMoney(remainingBudgetToday)}{" "}
                 <span className="text-lg md:text-2xl text-slate-400">đ</span>
               </span>
-
               <div className="mt-4 w-full bg-slate-200/60 rounded-full h-2 overflow-hidden flex shadow-inner">
                 <div
                   className="bg-gradient-to-r from-teal-400 to-emerald-500 h-full rounded-full transition-all duration-1000 ease-out"
@@ -662,7 +809,6 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Thẻ Tổng Tài Sản (Sang trọng) */}
           <div
             className={`col-span-1 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-5 md:p-6 rounded-[2rem] shadow-xl shadow-slate-900/30 flex flex-col justify-between text-white relative overflow-hidden ${isOverspent ? "col-span-2" : ""}`}
           >
@@ -715,15 +861,13 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* TẦNG 3: FORM & LỊCH SỬ (GLASSMORPHISM TRẮNG) */}
+        {/* TẦNG 3: FORM & LỊCH SỬ (ĐÃ LÀM LẠI HOÀN TOÀN) */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-          {/* Form Thêm Giao Dịch */}
-          <div className="bg-white p-6 md:p-8 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 lg:col-span-1 relative overflow-hidden">
-            {/* Họa tiết trang trí góc mờ ảo */}
-            <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-blue-50 rounded-full blur-3xl pointer-events-none"></div>
-
+          {/* ================= FORM THÊM GIAO DỊCH (LÀM LẠI) ================= */}
+          <div className="bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-100 lg:col-span-1 relative overflow-hidden">
             <h2 className="text-base md:text-lg font-black text-slate-900 mb-6 flex items-center gap-3 relative z-10">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
+              {/* Đã thay biểu tượng dấu + thành biểu tượng Ví tiền tinh tế */}
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
                 <svg
                   className="w-5 h-5"
                   fill="none"
@@ -733,8 +877,8 @@ export default function Dashboard() {
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth="2.5"
-                    d="M12 4v16m8-8H4"
+                    strokeWidth="2"
+                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
                   />
                 </svg>
               </div>
@@ -756,7 +900,7 @@ export default function Dashboard() {
                   <input
                     type="text"
                     required
-                    className="w-full bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 pl-9 pr-4 py-3.5 rounded-2xl font-black text-slate-900 text-base outline-none transition-all"
+                    className="w-full bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 pl-9 pr-4 py-3.5 rounded-2xl font-black text-slate-900 text-base outline-none transition-all"
                     placeholder="0"
                     value={amount ? Number(amount).toLocaleString("vi-VN") : ""}
                     onChange={(e) =>
@@ -765,47 +909,74 @@ export default function Dashboard() {
                   />
                 </div>
               </div>
+
+              {/* Box Chọn Danh Mục thay cho thẻ Select cũ */}
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 ml-1">
                   Danh mục
                 </label>
-                <select
-                  className="w-full bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 px-4 py-3.5 rounded-2xl font-bold text-slate-700 text-sm outline-none transition-all appearance-none cursor-pointer"
-                  value={categoryId}
-                  onChange={(e) => setCategoryId(e.target.value)}
+                <div
+                  onClick={() => setShowCategoryModal(true)}
+                  className="w-full bg-slate-50/50 hover:bg-slate-50 border border-slate-200 hover:border-indigo-300 px-4 py-3.5 rounded-2xl font-bold text-slate-700 text-sm cursor-pointer flex justify-between items-center transition-all group"
                 >
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                  <span className="flex items-center gap-2">
+                    {categoryId ? (
+                      <>
+                        <span className="text-lg">
+                          {getCategoryIcon(
+                            categories.find((c) => c.id == categoryId)?.name,
+                          )}
+                        </span>
+                        {categories.find((c) => c.id == categoryId)?.name}
+                      </>
+                    ) : (
+                      <span className="text-slate-400 font-normal">
+                        Chọn danh mục...
+                      </span>
+                    )}
+                  </span>
+                  <svg
+                    className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
               </div>
+
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 ml-1">
                   Ghi chú
                 </label>
                 <input
                   type="text"
-                  className="w-full bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 px-4 py-3.5 rounded-2xl font-medium text-slate-700 text-sm outline-none transition-all"
+                  className="w-full bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 px-4 py-3.5 rounded-2xl font-medium text-slate-700 text-sm outline-none transition-all"
                   placeholder="Tùy chọn nhập ghi chú..."
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                 />
               </div>
+
               <button
                 type="submit"
-                className="w-full bg-slate-900 hover:bg-blue-600 text-white font-bold text-sm py-4 rounded-2xl mt-2 transition-all duration-300 shadow-[0_8px_20px_rgb(0,0,0,0.12)] hover:shadow-blue-500/30 hover:-translate-y-0.5"
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm py-4 rounded-2xl mt-2 transition-all duration-300 shadow-[0_8px_20px_rgb(0,0,0,0.12)] hover:shadow-indigo-500/30 hover:-translate-y-0.5"
               >
-                Xác Nhận
+                Ghi Sổ
               </button>
             </form>
           </div>
 
-          {/* Bảng Lịch Sử */}
-          <div className="bg-white p-6 md:p-8 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 lg:col-span-2 overflow-hidden flex flex-col relative">
+          {/* ================= BẢNG LỊCH SỬ (LÀM LẠI CLEAN VÀ MINIMAL) ================= */}
+          <div className="bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-100 lg:col-span-2 overflow-hidden flex flex-col relative">
             <h2 className="text-base md:text-lg font-black text-slate-900 mb-6 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-600 border border-slate-200">
+              <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-600 border border-slate-200">
                 <svg
                   className="w-5 h-5"
                   fill="none"
@@ -816,7 +987,7 @@ export default function Dashboard() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth="2"
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                    d="M4 6h16M4 10h16M4 14h16M4 18h16"
                   />
                 </svg>
               </div>
@@ -826,36 +997,26 @@ export default function Dashboard() {
             <div className="overflow-x-auto flex-1 custom-scrollbar -mx-2 px-2">
               <table className="w-full text-left border-collapse whitespace-nowrap min-w-full">
                 <thead>
-                  <tr className="border-b border-slate-100 text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    <th className="pb-4 pr-4 pl-2">Thời gian</th>
-                    <th className="pb-4 pr-4">Danh mục</th>
-                    <th className="pb-4 pr-4 hidden md:table-cell">Ghi chú</th>
-                    <th className="pb-4 pr-4 text-right">Số tiền</th>
-                    <th className="pb-4 text-center">Thao tác</th>
+                  <tr className="border-b-2 border-slate-100 text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    <th className="pb-4 pr-4 pl-2 font-semibold">Thời gian</th>
+                    <th className="pb-4 pr-4 font-semibold">Danh mục</th>
+                    <th className="pb-4 pr-4 hidden md:table-cell font-semibold">
+                      Ghi chú
+                    </th>
+                    <th className="pb-4 pr-4 text-right font-semibold">
+                      Số tiền
+                    </th>
+                    <th className="pb-4 text-center font-semibold"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50 text-xs md:text-sm">
                   {transactions.length === 0 ? (
                     <tr>
                       <td colSpan="5" className="py-16 text-center">
-                        <div className="flex flex-col items-center justify-center opacity-80">
-                          <div className="bg-slate-50 w-20 h-20 rounded-full flex items-center justify-center mb-4 border border-slate-100">
-                            <svg
-                              className="w-10 h-10 text-slate-300"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="1.5"
-                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                              />
-                            </svg>
-                          </div>
+                        <div className="flex flex-col items-center justify-center opacity-70">
+                          <span className="text-4xl mb-3">📭</span>
                           <p className="text-slate-800 font-bold text-base">
-                            Chưa có giao dịch nào
+                            Chưa có giao dịch
                           </p>
                           <p className="text-slate-400 text-sm mt-1">
                             Sổ chi tiêu của bạn đang trống.
@@ -867,33 +1028,40 @@ export default function Dashboard() {
                     transactions.map((t) => (
                       <tr
                         key={t.id}
-                        className="hover:bg-slate-50/80 transition-colors group"
+                        className="hover:bg-slate-50/60 transition-colors group"
                       >
-                        <td className="py-4 md:py-5 pr-4 pl-2 text-slate-500 font-medium">
+                        <td className="py-4 md:py-4 pr-4 pl-2 text-slate-500 font-medium">
                           {new Date(t.transaction_date).toLocaleDateString(
                             "vi-VN",
+                            {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "numeric",
+                            },
                           )}
                         </td>
-                        <td className="py-4 md:py-5 pr-4">
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-600 border border-indigo-100/50">
+                        <td className="py-4 md:py-4 pr-4">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200/60">
+                            <span>{getCategoryIcon(t.category_name)}</span>{" "}
                             {t.category_name}
                           </span>
                         </td>
-                        <td className="py-4 md:py-5 pr-4 text-slate-500 hidden md:table-cell truncate max-w-[150px] font-medium">
+                        <td className="py-4 md:py-4 pr-4 text-slate-500 hidden md:table-cell truncate max-w-[150px] font-medium">
                           {t.note || (
-                            <span className="text-slate-300 italic">Trống</span>
+                            <span className="text-slate-300 italic">—</span>
                           )}
                         </td>
-                        <td className="py-4 md:py-5 pr-4 text-right font-black text-rose-600 text-base">
+                        <td className="py-4 md:py-4 pr-4 text-right font-black text-rose-600 text-base">
                           -{formatMoney(t.amount)}
                         </td>
-                        <td className="py-4 md:py-5 text-center">
+                        <td className="py-4 md:py-4 text-center">
                           <button
                             onClick={() => handleDeleteTransaction(t.id)}
-                            className="text-slate-400 hover:text-rose-600 bg-white hover:bg-rose-50 p-2.5 rounded-xl shadow-sm border border-slate-100 hover:border-rose-200 transition-all group-hover:scale-105"
+                            className="text-slate-300 hover:text-rose-500 p-2 rounded-lg hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                            title="Xóa & Hoàn tiền"
                           >
                             <svg
-                              className="w-4 h-4"
+                              className="w-5 h-5"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
