@@ -103,7 +103,9 @@ export default function Reports() {
         });
         setAutoAnalysisText(res.data.reply);
       } catch (error) {
-        setAutoAnalysisText("⚠️ AI đang ngủ. Bạn tải lại trang sau nhé.");
+        setAutoAnalysisText(
+          "⚠️ Lỗi: Không thể kết nối với AI. Vui lòng tải lại trang.",
+        );
       } finally {
         setIsAutoAnalyzing(false);
       }
@@ -113,15 +115,74 @@ export default function Reports() {
     return () => clearTimeout(timeoutId);
   }, [startDate, endDate, balances]);
 
-  const formatAIResponse = (text) => {
-    if (!text) return "";
-    return text
-      .replace(
+  // HÀM XỬ LÝ TEXT TỪ AI THÀNH CÁC KHỐI CHUYÊN NGHIỆP
+  const parseAnalysis = (text) => {
+    if (!text) return [];
+    const lines = text
+      .split("\n")
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0);
+    const items = [];
+
+    lines.forEach((line, index) => {
+      // Bỏ đi các số thứ tự, gạch đầu dòng (vd: "1. ", "- ", "* ")
+      let cleanLine = line.replace(/^[\d.\-\*]+\s*/, "");
+      let type = "default";
+      let icon = "💡";
+      let title = "Nhận định";
+      let colorClass = "bg-slate-800/50 border-slate-700 text-slate-300";
+
+      const lowerLine = cleanLine.toLowerCase();
+
+      // Dựa vào từ khóa để phân loại giao diện Card
+      if (lowerLine.includes("ngân sách") || lowerLine.includes("tiêu lố")) {
+        type = "budget";
+        icon = "💰";
+        title = "Ngân Sách";
+        colorClass = "bg-blue-900/30 border-blue-500/30 text-blue-100";
+      } else if (lowerLine.includes("giá cả") || lowerLine.includes("giá")) {
+        type = "price";
+        icon = "🏷️";
+        title = "Giá Cả";
+        colorClass = "bg-emerald-900/30 border-emerald-500/30 text-emerald-100";
+      } else if (
+        lowerLine.includes("sức khỏe") ||
+        lowerLine.includes("ngọt") ||
+        lowerLine.includes("mỡ")
+      ) {
+        type = "health";
+        icon = "❤️";
+        title = "Sức Khỏe";
+        colorClass = "bg-rose-900/30 border-rose-500/30 text-rose-100";
+      } else if (lowerLine.includes("nợ")) {
+        type = "debt";
+        icon = "⚠️";
+        title = "Nợ Nần";
+        colorClass = "bg-amber-900/30 border-amber-500/30 text-amber-100";
+      } else {
+        title = `Phân tích ${index + 1}`;
+      }
+
+      // Xóa phần tiêu đề dư thừa do AI sinh ra (vd: "Ngân sách: ") để tránh lặp từ
+      let content = cleanLine.replace(
+        /^\*\*(Ngân sách|Giá cả|Sức khỏe|Nợ nần|Giá cả giao dịch)[^:]*:?\*\*\s*/i,
+        "",
+      );
+      content = content.replace(
+        /^(Ngân sách|Giá cả|Sức khỏe|Nợ nần|Giá cả giao dịch)[^:]*:\s*/i,
+        "",
+      );
+
+      // In đậm phần còn lại nếu AI có nhấn mạnh
+      content = content.replace(
         /\*\*(.*?)\*\*/g,
-        '<strong class="text-white font-black">$1</strong>',
-      )
-      .replace(/\*(.*?)\*/g, '<em class="text-slate-400">$1</em>')
-      .replace(/\n/g, "<br/>");
+        '<strong class="text-white font-bold">$1</strong>',
+      );
+
+      items.push({ id: Math.random(), type, icon, title, colorClass, content });
+    });
+
+    return items;
   };
 
   const categoryTotals = {};
@@ -221,6 +282,7 @@ export default function Reports() {
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 relative">
+      {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 gap-4">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 text-white">
@@ -270,6 +332,7 @@ export default function Reports() {
         </div>
       </div>
 
+      {/* BIỂU ĐỒ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center col-span-1">
           <h2 className="font-black text-slate-800 mb-6 w-full text-left">
@@ -301,32 +364,61 @@ export default function Reports() {
         </div>
       </div>
 
-      {/* NHẬN ĐỊNH NGẮN GỌN TỪ AI */}
-      <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 rounded-[2rem] shadow-xl text-white">
-        <div className="flex items-center gap-3 border-b border-slate-700 pb-3 mb-4">
-          <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
-            <span className="text-base">⚡</span>
+      {/* 🌟 GIAO DIỆN NHẬN ĐỊNH AI MỚI - CHUYÊN NGHIỆP & HIỆN ĐẠI 🌟 */}
+      <div className="bg-[#0f172a] p-6 md:p-8 rounded-[2rem] shadow-2xl relative overflow-hidden">
+        {/* Background Hiệu ứng Ánh sáng */}
+        <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="relative z-10 flex items-center gap-4 border-b border-slate-800 pb-5 mb-6">
+          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+            <span className="text-2xl">🤖</span>
           </div>
-          <h2 className="font-black text-base text-blue-400 uppercase tracking-widest">
-            Nhận Định Nhanh
-          </h2>
+          <div>
+            <h2 className="font-black text-lg text-white tracking-wide">
+              AI PHÂN TÍCH THÔNG MINH
+            </h2>
+            <p className="text-slate-400 text-xs mt-1 font-medium">
+              Đánh giá tự động dựa trên thói quen thu chi của bạn
+            </p>
+          </div>
         </div>
 
         {isAutoAnalyzing ? (
-          <div className="space-y-3">
-            <div className="h-4 bg-slate-700/50 rounded animate-pulse w-3/4"></div>
-            <div className="h-4 bg-slate-700/50 rounded animate-pulse w-1/2"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="h-28 bg-slate-800/50 rounded-2xl animate-pulse border border-slate-700/50"
+              ></div>
+            ))}
           </div>
         ) : (
-          <div
-            className="text-sm text-slate-300 leading-relaxed font-medium"
-            dangerouslySetInnerHTML={{
-              __html: formatAIResponse(autoAnalysisText),
-            }}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+            {parseAnalysis(autoAnalysisText).map((item) => (
+              <div
+                key={item.id}
+                className={`p-5 rounded-2xl border backdrop-blur-md flex gap-4 items-start transition hover:scale-[1.02] ${item.colorClass}`}
+              >
+                <div className="text-2xl mt-0.5 drop-shadow-md">
+                  {item.icon}
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-sm mb-1.5 opacity-90 uppercase tracking-wider">
+                    {item.title}
+                  </h3>
+                  <p
+                    className="text-sm leading-relaxed opacity-85 font-medium"
+                    dangerouslySetInnerHTML={{ __html: item.content }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
+      {/* LỊCH SỬ GIAO DỊCH */}
       <div className="bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-100 space-y-4">
         <h2 className="text-lg font-black text-slate-900">
           📜 Lịch Sử Giao Dịch
@@ -415,7 +507,7 @@ export default function Reports() {
             </div>
             <div>
               <h2 className="font-black text-white text-base">
-                Hỏi AI Sổ Sách
+                Hỏi AI SmartFinance
               </h2>
               <p className="text-[10px] text-white/80 font-medium">
                 Chuyên thống kê tiền bạc

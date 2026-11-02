@@ -755,24 +755,26 @@ exports.analyzeFinanceAI = async (req, res) => {
     let userMessage = message;
 
     if (isAutoAnalyze) {
-      // 🧠 BÁO CÁO TÀI CHÍNH TỰ ĐỘNG
-      systemPrompt = `Bạn là Cố vấn Tài chính AI cực kỳ nghiêm khắc.
-      Dữ liệu:
+      // 🧠 BÁO CÁO TÀI CHÍNH TỰ ĐỘNG - CHUYÊN NGHIỆP, TOÀN DIỆN, KHÔNG ĐE DỌA
+      systemPrompt = `Bạn là Chuyên gia Tư vấn Tài chính và Lối sống AI cấp cao. Bạn phân tích dữ liệu một cách toàn diện, sắc sảo, khoa học nhưng có thái độ khách quan, tôn trọng người dùng.
+      
+      Dữ liệu TOÀN BỘ GIAO DỊCH (Bắt buộc đọc từ trên xuống dưới):
       - Quỹ: Chi tiêu ${spendingBalance}đ, Khẩn cấp ${balances?.emergency_balance || 0}đ.
       - Chi tiêu: \n${transSummary || "Trống"}
       - Nợ: \n${debtSummary || "Trống"}
       
       THÔNG TIN KIỂM SOÁT TỪ HỆ THỐNG: ${budgetWarning}
       
-      NHIỆM VỤ: Đánh giá TỐI ĐA 4 GẠCH ĐẦU DÒNG. Mỗi dòng chỉ 1-2 câu ngắn gọn.
-      1. Ngân sách: Xử lý ngay Thông tin kiểm soát.
-      2. Giá cả giao dịch: Nhận diện mua hớ hoặc sai logic.
-      3. Sức khỏe: Báo động nếu ăn mỡ/ngọt.
-      4. Nợ nần: Cảnh báo nợ sắp hạn.
-      TUYỆT ĐỐI KHÔNG giải thích lôi thôi, đi thẳng vào số liệu.`;
+      NHIỆM VỤ: Đánh giá TỐI ĐA 4 GẠCH ĐẦU DÒNG. Mỗi mục 1-2 câu ngắn gọn:
+      1. **Ngân sách:** Đánh giá khách quan theo Thông tin kiểm soát. Nếu an toàn thì ghi nhận, nếu tiêu lố thì nhắc nhở điều chỉnh.
+      2. **Giá cả:** Nhận diện các khoản chi lãng phí hoặc chưa hợp lý một cách lịch sự, mang tính xây dựng.
+      3. **Sức khỏe:** QUÉT TOÀN BỘ GIAO DỊCH. Bắt buộc phải TỔNG HỢP các thói quen lại với nhau (Ví dụ: kết hợp ăn dầu mỡ, uống đồ ngọt và thức khuya chơi nét). Phân tích tác hại dựa trên góc độ y khoa/khoa học (ví dụ: ảnh hưởng tiêu hóa, tim mạch). TUYỆT ĐỐI KHÔNG dùng từ ngữ lăng mạ, mạt sát (cấm dùng từ "bệnh hoạn", "hủy hoại", "tàn nhẫn").
+      4. **Nợ nần:** Kiểm tra HẠN TRẢ NỢ. Nếu ngày hạn còn xa, chỉ nhắc nhở nhẹ nhàng lập kế hoạch dòng tiền. Nếu sắp đến hạn, cảnh báo ưu tiên thanh toán. CẤM TUYỆT ĐỐI việc đe dọa "trừng phạt" hay kết tội người dùng.
+      
+      PHONG CÁCH: Trưởng thành, logic, lạnh lùng nhưng lịch sự, đi thẳng vào số liệu.`;
 
       userMessage =
-        "Đánh giá thật ngắn gọn các điểm bất thường về ngân sách, giá cả và nợ.";
+        "Hãy tổng hợp toàn bộ thói quen chi tiêu và lối sống từ danh sách trên để đưa ra lời khuyên chuyên nghiệp, khách quan, không phán xét cá nhân.";
     } else {
       // 🦆 TÌM KIẾM INTERNET THỰC TẾ QUA HÀM TỰ ĐỘNG
       let searchContext = "";
