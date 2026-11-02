@@ -157,3 +157,6 @@ vite.config.ts.timestamp-*
 # Biến môi trường cục bộ (nếu sau này bạn dùng file .env cho backend)
 backend/.env
 frontend/.env
+# Bỏ qua tất cả các file .env ở mọi ngóc ngách trong dự án
+.env
+backend/.env

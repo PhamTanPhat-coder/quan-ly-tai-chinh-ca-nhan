@@ -73,3 +73,6 @@ Chặn âm tiền: Bảo vệ tài khoản, từ chối giao dịch nếu tổng
 Sổ Nợ & Ticker Thông Báo: Quản lý danh sách "Tôi nợ người ta" / "Người ta nợ tôi", đếm ngược ngày đến hạn và hiển thị thông báo trượt luân phiên.
 
 Báo Cáo Cơ Cấu Chi Tiêu: Biểu đồ tròn trực quan kèm bộ lọc nhanh (Hôm nay, 7 ngày qua, Tháng này, Tùy chỉnh ngày) hiển thị danh sách giao dịch chi tiết.
+
+npm run dev
+node server.js

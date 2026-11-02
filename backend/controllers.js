@@ -390,12 +390,10 @@ exports.deleteDebt = async (req, res) => {
         );
       } else {
         if (balance.savings_balance < cost) {
-          return res
-            .status(400)
-            .json({
-              error:
-                "Không thể xóa vì số dư Tiết kiệm hiện tại không đủ để hoàn tác dòng tiền!",
-            });
+          return res.status(400).json({
+            error:
+              "Không thể xóa vì số dư Tiết kiệm hiện tại không đủ để hoàn tác dòng tiền!",
+          });
         }
         await run(
           `UPDATE balances SET savings_balance = savings_balance - ? WHERE user_id = ?`,
@@ -662,5 +660,134 @@ exports.changeEmail = async (req, res) => {
     res.json({ message: "Cập nhật Email thành công!" });
   } catch (error) {
     res.status(500).json({ error: "Lỗi Server" });
+  }
+};
+// =====================================================================
+// ================= 7. TÍCH HỢP AI GROQ (PHÂN TÍCH TÀI CHÍNH + GOOGLE) =
+// =====================================================================
+const Groq = require("groq-sdk");
+const google = require("googlethis");
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+exports.analyzeFinanceAI = async (req, res) => {
+  const { message, transactions, balances, debts, isAutoAnalyze } = req.body;
+
+  try {
+    const transSummary = transactions
+      .map(
+        (t) =>
+          `${t.transaction_date.split("T")[0]} | ${t.category_name} | -${t.amount}đ | ${t.note || ""}`,
+      )
+      .join("\n");
+    const debtSummary = debts
+      .map(
+        (d) =>
+          `${d.lender_or_borrower}: ${d.person_name} | ${d.amount}đ | Hạn: ${d.due_date} | ${d.status}`,
+      )
+      .join("\n");
+
+    // =========================================================
+    // THUẬT TOÁN TÍNH NGÂN SÁCH ĐỂ BÁO ĐỘNG CHO AI
+    // =========================================================
+    const now = new Date();
+    const lastDayOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+    ).getDate();
+    const remainingDays = lastDayOfMonth - now.getDate() + 1;
+    const todayStr = now.toISOString().split("T")[0];
+
+    let spentToday = 0;
+    transactions.forEach((t) => {
+      if (t.transaction_date.startsWith(todayStr)) spentToday += t.amount;
+    });
+
+    const spendingBalance = balances?.spending_balance || 0;
+    const originalTodayBudget =
+      (spendingBalance + spentToday) / (remainingDays || 1);
+
+    let budgetWarning = "";
+    if (spentToday > originalTodayBudget) {
+      const overspent = spentToday - originalTodayBudget;
+      const newDailyLimit =
+        spendingBalance / (remainingDays - 1 > 0 ? remainingDays - 1 : 1);
+      budgetWarning = `🚨 BÁO ĐỘNG ĐỎ: Người dùng đã TIÊU LỐ ${Math.round(overspent)}đ trong ngày hôm nay! Hạn mức ép buộc từ mai chỉ còn ${Math.round(newDailyLimit)}đ/ngày. BẮT BUỘC PHẢI CẢNH BÁO GAY GẮT NGAY DÒNG ĐẦU TIÊN!`;
+    } else {
+      budgetWarning = `✅ Tình hình chi tiêu trong ngày an toàn.`;
+    }
+
+    let systemPrompt = "";
+    let userMessage = message;
+
+    if (isAutoAnalyze) {
+      // 🧠 BÁO CÁO CỰC KỲ NGẮN GỌN (ÉP BUỘC ĐỌC CẢNH BÁO NGÂN SÁCH)
+      systemPrompt = `Bạn là Cố vấn Tài chính AI cực kỳ nghiêm khắc.
+      Dữ liệu:
+      - Quỹ: Chi tiêu ${spendingBalance}đ, Khẩn cấp ${balances?.emergency_balance || 0}đ.
+      - Chi tiêu: \n${transSummary || "Trống"}
+      - Nợ: \n${debtSummary || "Trống"}
+      
+      THÔNG TIN KIỂM SOÁT TỪ HỆ THỐNG: ${budgetWarning}
+      
+      NHIỆM VỤ: Đánh giá TỐI ĐA 4 GẠCH ĐẦU DÒNG. Mỗi dòng chỉ 1-2 câu ngắn gọn.
+      1. Ngân sách: Xử lý ngay Thông tin kiểm soát (nếu tiêu lố, phải khiển trách và báo hạn mức mới).
+      2. Giá cả: Nhận diện mua hớ hoặc sai logic (VD: máy tính 100k -> phụ kiện).
+      3. Sức khỏe: Báo động nếu ăn mỡ/ngọt.
+      4. Nợ nần: Cảnh báo nợ sắp hạn.
+      TUYỆT ĐỐI KHÔNG giải thích lôi thôi, đi thẳng vào số liệu.`;
+
+      userMessage =
+        "Đánh giá thật ngắn gọn các điểm bất thường về ngân sách, giá cả và nợ.";
+    } else {
+      // 🤖 TỐI ƯU HÓA GOOGLE SEARCH + KIẾN THỨC NỀN
+      let searchContext = "";
+      try {
+        const searchOptions = {
+          page: 0,
+          safe: false,
+          additional_params: { hl: "vi", gl: "vn" },
+        };
+        const searchResponse = await google.search(message, searchOptions);
+
+        let snippets = [];
+        if (searchResponse.featured_snippet?.description)
+          snippets.push("- " + searchResponse.featured_snippet.description);
+        if (searchResponse.results?.length > 0) {
+          snippets.push(
+            ...searchResponse.results
+              .slice(0, 3)
+              .map((r) => `- ${r.title}: ${r.description}`),
+          );
+        }
+        if (snippets.length > 0)
+          searchContext = `[KẾT QUẢ GOOGLE MỚI NHẤT]:\n${snippets.join("\n")}`;
+      } catch (e) {
+        console.error("Lỗi Google Search:", e.message);
+      }
+
+      systemPrompt = `Bạn là Trợ Lý AI.
+      DỮ LIỆU SỔ SÁCH CỦA TÔI: \nGiao dịch: \n${transSummary}\n Nợ: \n${debtSummary}
+      
+      ${searchContext}
+      
+      NGUYÊN TẮC:
+      1. Nếu người dùng hỏi giá cả/tin tức, HÃY ƯU TIÊN lấy dữ liệu từ [KẾT QUẢ GOOGLE MỚI NHẤT] để trả lời.
+      2. Nếu [KẾT QUẢ GOOGLE] trống, HÃY TỰ DÙNG KIẾN THỨC VỐN CÓ TRONG NÃO CỦA BẠN để đưa ra mức giá ước lượng hoặc tư vấn. KHÔNG ĐƯỢC XIN LỖI LÀ KHÔNG CÓ DỮ LIỆU.
+      3. Trả lời NGẮN GỌN, đi thẳng vào vấn đề.`;
+    }
+
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userMessage },
+      ],
+      model: "qwen/qwen3.8-27b",
+      temperature: 0.3,
+    });
+
+    res.json({ reply: chatCompletion.choices[0].message.content });
+  } catch (error) {
+    console.error("Lỗi Groq AI:", error.message);
+    res.status(500).json({ error: "Lỗi kết nối với Trợ lý AI Groq!" });
   }
 };

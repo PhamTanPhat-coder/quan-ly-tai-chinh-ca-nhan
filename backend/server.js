@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const db = require("./db");
@@ -30,6 +31,8 @@ app.get("/api/debts/:userId", controllers.getDebts);
 app.post("/api/debts", controllers.addDebt);
 app.put("/api/debts/:id/status", controllers.updateDebtStatus);
 app.delete("/api/debts/:id", controllers.deleteDebt);
+//chat
+app.post("/api/ai-chat", controllers.analyzeFinanceAI);
 // =================Lấy thông tin cá nhân và Đổi Email=================
 app.get("/api/user/:userId", controllers.getUserInfo);
 app.put("/api/change-email", controllers.changeEmail);
