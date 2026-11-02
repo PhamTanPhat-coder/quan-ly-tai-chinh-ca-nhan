@@ -663,11 +663,46 @@ exports.changeEmail = async (req, res) => {
   }
 };
 // =====================================================================
-// ================= 7. TÍCH HỢP AI GROQ (PHÂN TÍCH TÀI CHÍNH + GOOGLE) =
+// ================= 7. TÍCH HỢP AI GROQ (PHÂN TÍCH TÀI CHÍNH + DUCKDUCKGO) =
 // =====================================================================
 const Groq = require("groq-sdk");
-const google = require("googlethis");
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+// Hàm tìm kiếm DuckDuckGo chuẩn qua API ngầm (Không lỗi vặt)
+async function searchDuckDuckGo(query) {
+  try {
+    const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      },
+    });
+    const html = await response.text();
+
+    // Trích xuất tiêu đề và snippet đơn giản từ HTML trả về
+    const results = [];
+    const snippetRegex = /<a class="result__snippet[^>]*>(.*?)<\/a>/g;
+    const titleRegex = /<a class="result__url"[^>]*>(.*?)<\/a>/g;
+
+    let match;
+    let count = 0;
+    while ((match = snippetRegex.exec(html)) !== null && count < 4) {
+      const cleanSnippet = match[1].replace(/<\/?[^>]+(>|$)/g, "").trim();
+      results.push({ snippet: cleanSnippet });
+      count++;
+    }
+
+    if (results.length > 0) {
+      return results.map((r) => `- ${r.snippet}`).join("\n");
+    }
+    return "";
+  } catch (e) {
+    console.log("Lỗi tìm kiếm:", e.message);
+    return "";
+  }
+}
+
 exports.analyzeFinanceAI = async (req, res) => {
   const { message, transactions, balances, debts, isAutoAnalyze } = req.body;
 
@@ -720,7 +755,7 @@ exports.analyzeFinanceAI = async (req, res) => {
     let userMessage = message;
 
     if (isAutoAnalyze) {
-      // 🧠 BÁO CÁO CỰC KỲ NGẮN GỌN (ÉP BUỘC ĐỌC CẢNH BÁO NGÂN SÁCH)
+      // 🧠 BÁO CÁO TÀI CHÍNH TỰ ĐỘNG
       systemPrompt = `Bạn là Cố vấn Tài chính AI cực kỳ nghiêm khắc.
       Dữ liệu:
       - Quỹ: Chi tiêu ${spendingBalance}đ, Khẩn cấp ${balances?.emergency_balance || 0}đ.
@@ -730,8 +765,8 @@ exports.analyzeFinanceAI = async (req, res) => {
       THÔNG TIN KIỂM SOÁT TỪ HỆ THỐNG: ${budgetWarning}
       
       NHIỆM VỤ: Đánh giá TỐI ĐA 4 GẠCH ĐẦU DÒNG. Mỗi dòng chỉ 1-2 câu ngắn gọn.
-      1. Ngân sách: Xử lý ngay Thông tin kiểm soát (nếu tiêu lố, phải khiển trách và báo hạn mức mới).
-      2. Giá cả: Nhận diện mua hớ hoặc sai logic (VD: máy tính 100k -> phụ kiện).
+      1. Ngân sách: Xử lý ngay Thông tin kiểm soát.
+      2. Giá cả giao dịch: Nhận diện mua hớ hoặc sai logic.
       3. Sức khỏe: Báo động nếu ăn mỡ/ngọt.
       4. Nợ nần: Cảnh báo nợ sắp hạn.
       TUYỆT ĐỐI KHÔNG giải thích lôi thôi, đi thẳng vào số liệu.`;
@@ -739,41 +774,36 @@ exports.analyzeFinanceAI = async (req, res) => {
       userMessage =
         "Đánh giá thật ngắn gọn các điểm bất thường về ngân sách, giá cả và nợ.";
     } else {
-      // 🤖 TỐI ƯU HÓA GOOGLE SEARCH + KIẾN THỨC NỀN
+      // 🦆 TÌM KIẾM INTERNET THỰC TẾ QUA HÀM TỰ ĐỘNG
       let searchContext = "";
       try {
-        const searchOptions = {
-          page: 0,
-          safe: false,
-          additional_params: { hl: "vi", gl: "vn" },
-        };
-        const searchResponse = await google.search(message, searchOptions);
-
-        let snippets = [];
-        if (searchResponse.featured_snippet?.description)
-          snippets.push("- " + searchResponse.featured_snippet.description);
-        if (searchResponse.results?.length > 0) {
-          snippets.push(
-            ...searchResponse.results
-              .slice(0, 3)
-              .map((r) => `- ${r.title}: ${r.description}`),
-          );
+        const searchResults = await searchDuckDuckGo(message);
+        if (searchResults) {
+          searchContext = `[KẾT QUẢ THỰC TẾ TỪ INTERNET]:\n${searchResults}`;
         }
-        if (snippets.length > 0)
-          searchContext = `[KẾT QUẢ GOOGLE MỚI NHẤT]:\n${snippets.join("\n")}`;
       } catch (e) {
-        console.error("Lỗi Google Search:", e.message);
+        console.log("Lỗi tìm kiếm internet:", e.message);
       }
 
-      systemPrompt = `Bạn là Trợ Lý AI.
-      DỮ LIỆU SỔ SÁCH CỦA TÔI: \nGiao dịch: \n${transSummary}\n Nợ: \n${debtSummary}
+      systemPrompt = `Bạn là Trợ lý AI đa năng, thông thái và thực tế.
       
-      ${searchContext}
+      DỮ LIỆU TÀI CHÍNH CÁ NHÂN (CHỈ DÙNG KHI HỎI VỀ TIỀN CỦA TÔI): 
+      - Giao dịch: \n${transSummary}
+      - Nợ: \n${debtSummary}
       
-      NGUYÊN TẮC:
-      1. Nếu người dùng hỏi giá cả/tin tức, HÃY ƯU TIÊN lấy dữ liệu từ [KẾT QUẢ GOOGLE MỚI NHẤT] để trả lời.
-      2. Nếu [KẾT QUẢ GOOGLE] trống, HÃY TỰ DÙNG KIẾN THỨC VỐN CÓ TRONG NÃO CỦA BẠN để đưa ra mức giá ước lượng hoặc tư vấn. KHÔNG ĐƯỢC XIN LỖI LÀ KHÔNG CÓ DỮ LIỆU.
-      3. Trả lời NGẮN GỌN, đi thẳng vào vấn đề.`;
+      DỮ LIỆU TÌM KIẾM MỚI NHẤT: ${searchContext || "Không có kết quả tra cứu trực tiếp từ mạng."}
+      
+      NGUYÊN TẮC XỬ LÝ THÔNG MINH:
+      1. NẾU HỎI VỀ GIÁ CẢ THỊ TRƯỜNG / HÀNG HÓA (Ví dụ: giá rau, giá thịt, giá vàng):
+         - Ưu tiên số 1: Dùng [KẾT QUẢ TÌM KIẾM MỚI NHẤT] nếu có.
+         - Dự phòng: Nếu kết quả tìm kiếm trống/lỗi, BẠN VẪN ĐƯỢC PHÉP dùng kiến thức nền tảng để áng chừng khoảng giá tham khảo hợp lý cho người dùng.
+         
+      2. NẾU HỎI VỀ THỜI SỰ, TỘI PHẠM, NHÂN VẬT CỤ THỂ (Ví dụ: Đoàn Văn Sáng):
+         - Bắt buộc phải dựa vào dữ liệu tìm kiếm ở trên. Nếu không có dữ liệu thực tế, phải đáp gọn: "Tôi không tìm thấy thông tin chính xác trên mạng." CẤM TUYỆT ĐỐI TỰ BỊA ĐẶT CÂU CHUYỆN HOẶC VỤ ÁN GIẢ.
+         
+      3. NẾU HỎI VỀ TIỀN BẠC CÁ NHÂN: Chỉ tra cứu trên dữ liệu giao dịch và nợ nần ở trên.
+      
+      PHONG CÁCH: Ngắn gọn, tự nhiên, đi thẳng vào vấn đề.`;
     }
 
     const chatCompletion = await groq.chat.completions.create({
