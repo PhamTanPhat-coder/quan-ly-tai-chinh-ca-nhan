@@ -367,9 +367,9 @@ export default function Dashboard() {
 
   return (
     <div className="relative min-h-screen bg-slate-50 overflow-hidden text-slate-800">
-      {/* BACKGROUND MESH GRADIENT */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-400/20 rounded-full blur-[100px] pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-400/20 rounded-full blur-[100px] pointer-events-none"></div>
+      {/* BACKGROUND MESH GRADIENT (Ẩn trên mobile để lướt mượt hơn) */}
+      <div className="hidden md:block absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-400/20 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="hidden md:block absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-400/20 rounded-full blur-[100px] pointer-events-none"></div>
 
       <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-5 md:space-y-8 relative z-10">
         {/* ================= MODAL CHỌN DANH MỤC (THAY THẾ DROP DOWN) ================= */}
