@@ -366,11 +366,11 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="relative min-h-screen bg-slate-50 overflow-hidden text-slate-800">
+    <div className="relative min-h-screen bg-blue-200 overflow-hidden text-slate-800">
+      {" "}
       {/* BACKGROUND MESH GRADIENT (Ẩn trên mobile để lướt mượt hơn) */}
       <div className="hidden md:block absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-400/20 rounded-full blur-[100px] pointer-events-none"></div>
       <div className="hidden md:block absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-400/20 rounded-full blur-[100px] pointer-events-none"></div>
-
       <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-5 md:space-y-8 relative z-10">
         {/* ================= MODAL CHỌN DANH MỤC (THAY THẾ DROP DOWN) ================= */}
         {showCategoryModal && (
@@ -521,10 +521,10 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* TẦNG 1: 3 QUỸ THÁC NƯỚC (Grid: 1 cột trên mobile, 2 cột tablet, 3 cột desktop) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {/* Quỹ Chi Tiêu */}
-          <div className="col-span-1 bg-gradient-to-br from-blue-700 via-indigo-800 to-blue-900 p-5 md:p-7 rounded-[2rem] shadow-xl shadow-blue-900/20 text-white flex flex-col justify-between relative overflow-hidden group">
+        {/* TẦNG 1 + TỔNG TÀI SẢN: 2 cột trên mobile, 4 cột trên máy tính để nằm trọn 1 hàng ngang */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
+          {/* 1. Quỹ Chi Tiêu */}
+          <div className="col-span-1 bg-gradient-to-br from-blue-700 via-indigo-800 to-blue-900 p-4 md:p-6 rounded-[2rem] shadow-xl shadow-blue-900/20 text-white flex flex-col justify-between relative overflow-hidden group">
             <svg
               className="absolute top-0 right-0 w-32 h-32 text-white/5 transform translate-x-8 -translate-y-8 group-hover:scale-110 transition-transform duration-500"
               fill="currentColor"
@@ -532,18 +532,11 @@ export default function Dashboard() {
             >
               <circle cx="50" cy="50" r="50" />
             </svg>
-            <svg
-              className="absolute bottom-0 left-0 w-24 h-24 text-white/5 transform -translate-x-6 translate-y-6"
-              fill="currentColor"
-              viewBox="0 0 100 100"
-            >
-              <polygon points="50,0 100,100 0,100" />
-            </svg>
-            <div className="relative z-10 flex justify-between items-center mb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
+            <div className="relative z-10 flex justify-between items-center mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
                   <svg
-                    className="w-4 h-4 text-white"
+                    className="w-3.5 h-3.5 text-white"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -556,7 +549,7 @@ export default function Dashboard() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-blue-100">
+                <h3 className="text-[11px] md:text-xs font-bold uppercase tracking-wider text-blue-100">
                   Chi tiêu tháng này
                 </h3>
               </div>
@@ -564,10 +557,10 @@ export default function Dashboard() {
                 onClick={() =>
                   handleEditFundDirectly("spending_balance", "Quỹ Chi Tiêu")
                 }
-                className="text-blue-200 hover:text-white bg-white/10 hover:bg-white/20 p-1.5 rounded-lg backdrop-blur-md transition"
+                className="text-blue-200 hover:text-white bg-white/10 p-1 rounded-lg transition"
               >
                 <svg
-                  className="w-4 h-4"
+                  className="w-3.5 h-3.5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -581,52 +574,39 @@ export default function Dashboard() {
                 </svg>
               </button>
             </div>
-            <p className="relative z-10 text-lg sm:text-2xl md:text-4xl font-black mb-5 drop-shadow-md leading-tight">
+            <p className="relative z-10 text-base sm:text-xl md:text-3xl font-black mb-4 drop-shadow-md leading-tight">
               {formatMoney(balances.spending_balance)}
-              <span className="text-sm md:text-base font-bold text-blue-300 ml-1.5">
+              <span className="text-xs md:text-base font-bold text-blue-300 ml-1">
                 đ
               </span>
             </p>
-            <div className="relative z-10 flex gap-2">
+            <div className="relative z-10 flex gap-1.5">
               <button
                 onClick={() =>
                   handleTransferFund("spending", "savings", "Quỹ Tiết Kiệm")
                 }
-                className="flex-1 bg-white/15 hover:bg-white/25 backdrop-blur-md text-white text-[10px] md:text-xs font-bold py-2.5 rounded-xl text-center transition"
+                className="flex-1 bg-white/15 hover:bg-white/25 text-white text-[10px] md:text-xs font-bold py-2 rounded-xl text-center transition"
               >
-                Chuyển tiết kiệm
+                Tiết kiệm
               </button>
               <button
                 onClick={() =>
                   handleTransferFund("spending", "emergency", "Quỹ Dự Phòng")
                 }
-                className="flex-1 bg-white/15 hover:bg-white/25 backdrop-blur-md text-white text-[10px] md:text-xs font-bold py-2.5 rounded-xl text-center transition"
+                className="flex-1 bg-white/15 hover:bg-white/25 text-white text-[10px] md:text-xs font-bold py-2 rounded-xl text-center transition"
               >
-                Chuyển dự phòng
+                Dự phòng
               </button>
             </div>
           </div>
 
-          {/* Quỹ Tiết Kiệm */}
-          <div className="col-span-1 bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-900 p-5 md:p-7 rounded-[2rem] shadow-xl shadow-emerald-900/20 text-white flex flex-col justify-between relative overflow-hidden group">
-            <svg
-              className="absolute top-0 right-0 w-40 h-40 text-white/5 transform translate-x-12 -translate-y-4 group-hover:rotate-12 transition-transform duration-700"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="1"
-                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <div className="relative z-10 flex justify-between items-center mb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
+          {/* 2. Quỹ Tiết Kiệm */}
+          <div className="col-span-1 bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-900 p-4 md:p-6 rounded-[2rem] shadow-xl shadow-emerald-900/20 text-white flex flex-col justify-between relative overflow-hidden group">
+            <div className="relative z-10 flex justify-between items-center mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
                   <svg
-                    className="w-4 h-4 text-white"
+                    className="w-3.5 h-3.5 text-white"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -639,7 +619,7 @@ export default function Dashboard() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-100">
+                <h3 className="text-[11px] md:text-xs font-bold uppercase tracking-wider text-emerald-100">
                   Quỹ Tiết Kiệm
                 </h3>
               </div>
@@ -647,10 +627,10 @@ export default function Dashboard() {
                 onClick={() =>
                   handleEditFundDirectly("savings_balance", "Quỹ Tiết Kiệm")
                 }
-                className="text-emerald-200 hover:text-white bg-white/10 hover:bg-white/20 p-1.5 rounded-lg backdrop-blur-md transition"
+                className="text-emerald-200 hover:text-white bg-white/10 p-1 rounded-lg transition"
               >
                 <svg
-                  className="w-4 h-4"
+                  className="w-3.5 h-3.5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -664,47 +644,39 @@ export default function Dashboard() {
                 </svg>
               </button>
             </div>
-            <p className="relative z-10 text-lg sm:text-2xl md:text-4xl font-black mb-5 drop-shadow-md leading-tight">
+            <p className="relative z-10 text-base sm:text-xl md:text-3xl font-black mb-4 drop-shadow-md leading-tight">
               {formatMoney(balances.savings_balance)}
-              <span className="text-sm md:text-base font-bold text-emerald-300 ml-1.5">
+              <span className="text-xs md:text-base font-bold text-emerald-300 ml-1">
                 đ
               </span>
             </p>
-            <div className="relative z-10 flex gap-2">
+            <div className="relative z-10 flex gap-1.5">
               <button
                 onClick={() =>
                   handleTransferFund("savings", "spending", "Quỹ Chi Tiêu")
                 }
-                className="flex-1 bg-white/15 hover:bg-white/25 backdrop-blur-md text-white text-[10px] md:text-xs font-bold py-2.5 rounded-xl text-center transition"
+                className="flex-1 bg-white/15 hover:bg-white/25 text-white text-[10px] md:text-xs font-bold py-2 rounded-xl text-center transition"
               >
-                Rút về chi tiêu
+                Rút chi tiêu
               </button>
               <button
                 onClick={() =>
                   handleTransferFund("savings", "emergency", "Quỹ Dự Phòng")
                 }
-                className="flex-1 bg-white/15 hover:bg-white/25 backdrop-blur-md text-white text-[10px] md:text-xs font-bold py-2.5 rounded-xl text-center transition"
+                className="flex-1 bg-white/15 hover:bg-white/25 text-white text-[10px] md:text-xs font-bold py-2 rounded-xl text-center transition"
               >
                 Gửi dự phòng
               </button>
             </div>
           </div>
 
-          {/* Quỹ Khẩn Cấp */}
-          <div className="col-span-1 md:col-span-2 lg:col-span-1 bg-gradient-to-br from-rose-700 via-rose-900 to-black p-5 md:p-7 rounded-[2rem] shadow-xl shadow-rose-900/30 text-white flex flex-col justify-between relative overflow-hidden group">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent opacity-50"></div>
-            <svg
-              className="absolute bottom-0 right-0 w-32 h-32 text-white/5 transform translate-x-8 translate-y-8"
-              fill="currentColor"
-              viewBox="0 0 100 100"
-            >
-              <polygon points="0,100 100,0 100,100" />
-            </svg>
-            <div className="relative z-10 flex justify-between items-center mb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-rose-500/30 backdrop-blur-md flex items-center justify-center border border-rose-400/30">
+          {/* 3. Quỹ Khẩn Cấp */}
+          <div className="col-span-1 bg-gradient-to-br from-rose-700 via-rose-900 to-black p-4 md:p-6 rounded-[2rem] shadow-xl shadow-rose-900/30 text-white flex flex-col justify-between relative overflow-hidden group">
+            <div className="relative z-10 flex justify-between items-center mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-full bg-rose-500/30 backdrop-blur-md flex items-center justify-center border border-rose-400/30">
                   <svg
-                    className="w-4 h-4 text-rose-200"
+                    className="w-3.5 h-3.5 text-rose-200"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -717,7 +689,7 @@ export default function Dashboard() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-rose-200">
+                <h3 className="text-[11px] md:text-xs font-bold uppercase tracking-wider text-rose-200">
                   QUỸ DỰ PHÒNG Khẩn Cấp
                 </h3>
               </div>
@@ -725,10 +697,10 @@ export default function Dashboard() {
                 onClick={() =>
                   handleEditFundDirectly("emergency_balance", "Quỹ Khẩn Cấp")
                 }
-                className="text-rose-300 hover:text-white bg-white/10 hover:bg-white/20 p-1.5 rounded-lg backdrop-blur-md transition"
+                className="text-rose-300 hover:text-white bg-white/10 p-1 rounded-lg transition"
               >
                 <svg
-                  className="w-4 h-4"
+                  className="w-3.5 h-3.5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -742,20 +714,70 @@ export default function Dashboard() {
                 </svg>
               </button>
             </div>
-            <p className="relative z-10 text-lg sm:text-2xl md:text-4xl font-black mb-5 drop-shadow-md leading-tight">
+            <p className="relative z-10 text-base sm:text-xl md:text-3xl font-black mb-4 drop-shadow-md leading-tight">
               {formatMoney(balances.emergency_balance)}
-              <span className="text-sm md:text-base font-bold text-rose-300 ml-1.5">
+              <span className="text-xs md:text-base font-bold text-rose-300 ml-1">
                 đ
               </span>
             </p>
-            <div className="relative z-10 w-full bg-rose-950/50 border border-rose-500/20 text-rose-200 text-[10px] md:text-xs font-bold py-2.5 rounded-xl text-center backdrop-blur-md">
-              Chỉ được dùng khi các quỹ khác cạn kiệt🛡️
+            <div className="relative z-10 w-full bg-rose-950/50 border border-rose-500/20 text-rose-200 text-[10px] md:text-xs font-bold py-2 rounded-xl text-center">
+              Chỉ dùng khi cạn kiệt 🛡️
             </div>
+          </div>
+
+          {/* 4. Tổng Tài Sản (Nằm chung vào đây để trên máy tính xếp đủ 4 card thành 1 hàng ngang) */}
+          <div className="col-span-1 bg-gradient-to-br from-amber-600 via-orange-600 to-amber-800 p-4 md:p-6 rounded-[2rem] shadow-xl shadow-orange-950/30 flex flex-col justify-between relative overflow-hidden">
+            <div className="absolute -top-12 -right-12 w-32 h-32 bg-white/15 rounded-full blur-2xl"></div>
+            <div>
+              <div className="flex items-center gap-2 mb-2 relative z-10">
+                <div className="w-7 h-7 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
+                  <svg
+                    className="w-3.5 h-3.5 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"
+                    />
+                  </svg>
+                </div>
+                <span className="text-[11px] md:text-sm font-bold text-amber-100 uppercase tracking-wide">
+                  Tổng Tài Sản
+                </span>
+              </div>
+              <span className="text-base sm:text-xl md:text-3xl font-black leading-tight relative z-10 drop-shadow-md">
+                {formatMoney(totalAssets)}{" "}
+                <span className="text-xs md:text-2xl text-amber-200">đ</span>
+              </span>
+            </div>
+            <button
+              onClick={handleResetData}
+              className="relative z-10 w-full bg-white/15 hover:bg-rose-500/20 text-white hover:text-rose-200 font-bold text-[10px] md:text-sm py-2.5 rounded-xl mt-3 backdrop-blur-md transition flex items-center justify-center gap-1.5 border border-white/10"
+            >
+              <svg
+                className="w-3.5 h-3.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+              Xóa Dữ Liệu
+            </button>
           </div>
         </div>
 
-        {/* TẦNG 2: NGÂN SÁCH ĐỘNG & TỔNG TÀI SẢN */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+        {/* TẦNG 2: RIÊNG CARD GỢI Ý TIÊU HÔM NAY (Nằm độc lập ở phía dưới, chiếm full chiều ngang cực kỳ đẹp mắt) */}
+        <div className="grid grid-cols-1 gap-4 md:gap-6">
           {isOverspent ? (
             <div className="col-span-1 bg-gradient-to-br from-purple-800 via-indigo-950 to-slate-950 p-5 md:p-6 rounded-[2rem] shadow-xl shadow-purple-950/30 text-white flex flex-col justify-between relative overflow-hidden">
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-500/20 via-transparent to-transparent opacity-60"></div>
@@ -789,7 +811,6 @@ export default function Dashboard() {
             </div>
           ) : (
             <div className="col-span-1 bg-gradient-to-tr from-sky-600 via-indigo-700 to-pink-600 p-5 md:p-6 rounded-[2rem] shadow-xl shadow-indigo-950/20 text-white flex flex-col justify-between relative overflow-hidden">
-              {/* Hiệu ứng mesh gradient pha trộn màu kiểu iPhone */}
               <div className="absolute top-0 right-0 w-36 h-36 bg-pink-400/30 rounded-full blur-2xl pointer-events-none"></div>
               <div className="absolute bottom-0 left-0 w-36 h-36 bg-cyan-400/20 rounded-full blur-2xl pointer-events-none"></div>
               <div>
@@ -832,57 +853,7 @@ export default function Dashboard() {
               </div>
             </div>
           )}
-
-          <div className="col-span-1 bg-gradient-to-br from-amber-600 via-orange-600 to-amber-800 p-5 md:p-6 rounded-[2rem] shadow-xl shadow-orange-950/30 flex flex-col justify-between text-white relative overflow-hidden">
-            <div className="absolute -top-12 -right-12 w-32 h-32 bg-white/15 rounded-full blur-2xl"></div>
-            <div>
-              <div className="flex items-center gap-2 mb-2 relative z-10">
-                <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
-                  <svg
-                    className="w-4 h-4 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"
-                    />
-                  </svg>
-                </div>
-                <span className="text-xs md:text-sm font-bold text-amber-100 uppercase tracking-wide">
-                  Tổng Tài Sản
-                </span>
-              </div>
-              <span className="text-lg sm:text-2xl md:text-4xl font-black leading-tight relative z-10 drop-shadow-md">
-                {formatMoney(totalAssets)}{" "}
-                <span className="text-sm md:text-2xl text-amber-200">đ</span>
-              </span>
-            </div>
-            <button
-              onClick={handleResetData}
-              className="relative z-10 w-full bg-white/15 hover:bg-rose-500/20 text-white hover:text-rose-200 font-bold text-[10px] md:text-sm py-3 rounded-xl md:mt-4 mt-3 backdrop-blur-md transition flex items-center justify-center gap-2 border border-white/10"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                />
-              </svg>
-              Xóa Dữ Liệu
-            </button>
-          </div>
         </div>
-
         {/* TẦNG 3: FORM & LỊCH SỬ */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
           {/* ================= FORM THÊM GIAO DỊCH ================= */}
@@ -1078,7 +1049,7 @@ export default function Dashboard() {
                         <td className="py-4 md:py-4 text-center">
                           <button
                             onClick={() => handleDeleteTransaction(t.id)}
-                            className="text-slate-300 hover:text-rose-500 p-2 rounded-lg hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                            className="text-slate-400 hover:text-rose-600 p-2 rounded-lg hover:bg-rose-50 transition-all"
                             title="Xóa & Hoàn tiền"
                           >
                             <svg
