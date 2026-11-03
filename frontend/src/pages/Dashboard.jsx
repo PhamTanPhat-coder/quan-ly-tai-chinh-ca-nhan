@@ -521,8 +521,8 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* TẦNG 1: 3 QUỸ THÁC NƯỚC (GIỮ NGUYÊN VÌ ĐÃ ĐẸP) */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        {/* TẦNG 1: 3 QUỸ THÁC NƯỚC (Grid: 1 cột trên mobile, 2 cột tablet, 3 cột desktop) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {/* Quỹ Chi Tiêu */}
           <div className="col-span-1 bg-gradient-to-br from-blue-700 via-indigo-800 to-blue-900 p-5 md:p-7 rounded-[2rem] shadow-xl shadow-blue-900/20 text-white flex flex-col justify-between relative overflow-hidden group">
             <svg
@@ -581,7 +581,7 @@ export default function Dashboard() {
                 </svg>
               </button>
             </div>
-            <p className="relative z-10 text-2xl sm:text-3xl lg:text-4xl font-black truncate mb-5 drop-shadow-md">
+            <p className="relative z-10 text-lg sm:text-2xl md:text-4xl font-black mb-5 drop-shadow-md leading-tight">
               {formatMoney(balances.spending_balance)}
               <span className="text-sm md:text-base font-bold text-blue-300 ml-1.5">
                 đ
@@ -664,7 +664,7 @@ export default function Dashboard() {
                 </svg>
               </button>
             </div>
-            <p className="relative z-10 text-2xl sm:text-3xl lg:text-4xl font-black truncate mb-5 drop-shadow-md">
+            <p className="relative z-10 text-lg sm:text-2xl md:text-4xl font-black mb-5 drop-shadow-md leading-tight">
               {formatMoney(balances.savings_balance)}
               <span className="text-sm md:text-base font-bold text-emerald-300 ml-1.5">
                 đ
@@ -691,7 +691,7 @@ export default function Dashboard() {
           </div>
 
           {/* Quỹ Khẩn Cấp */}
-          <div className="col-span-2 lg:col-span-1 bg-gradient-to-br from-rose-700 via-rose-900 to-black p-5 md:p-7 rounded-[2rem] shadow-xl shadow-rose-900/30 text-white flex flex-col justify-between relative overflow-hidden group">
+          <div className="col-span-1 md:col-span-2 lg:col-span-1 bg-gradient-to-br from-rose-700 via-rose-900 to-black p-5 md:p-7 rounded-[2rem] shadow-xl shadow-rose-900/30 text-white flex flex-col justify-between relative overflow-hidden group">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent opacity-50"></div>
             <svg
               className="absolute bottom-0 right-0 w-32 h-32 text-white/5 transform translate-x-8 translate-y-8"
@@ -742,7 +742,7 @@ export default function Dashboard() {
                 </svg>
               </button>
             </div>
-            <p className="relative z-10 text-2xl sm:text-3xl lg:text-4xl font-black truncate mb-5 drop-shadow-md">
+            <p className="relative z-10 text-lg sm:text-2xl md:text-4xl font-black mb-5 drop-shadow-md leading-tight">
               {formatMoney(balances.emergency_balance)}
               <span className="text-sm md:text-base font-bold text-rose-300 ml-1.5">
                 đ
@@ -754,10 +754,10 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* TẦNG 2: NGÂN SÁCH ĐỘNG & TỔNG TÀI SẢN (GIỮ NGUYÊN) */}
-        <div className="grid grid-cols-2 gap-4 md:gap-6">
+        {/* TẦNG 2: NGÂN SÁCH ĐỘNG & TỔNG TÀI SẢN (Grid: 1 cột trên mobile, 2 cột trên desktop) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           {isOverspent ? (
-            <div className="col-span-2 bg-gradient-to-br from-rose-50 to-orange-50 border border-rose-200 p-5 md:p-6 rounded-[2rem] flex flex-col justify-center relative shadow-lg shadow-rose-100/50">
+            <div className="col-span-1 md:col-span-2 bg-gradient-to-br from-rose-50 to-orange-50 border border-rose-200 p-5 md:p-6 rounded-[2rem] flex flex-col justify-center relative shadow-lg shadow-rose-100/50">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-8 h-8 rounded-full bg-rose-200 flex items-center justify-center animate-pulse">
                   <svg
@@ -808,9 +808,9 @@ export default function Dashboard() {
                   Gợi ý tiêu hôm nay
                 </span>
               </div>
-              <span className="text-2xl md:text-4xl font-black text-slate-900 truncate">
+              <span className="text-lg sm:text-2xl md:text-4xl font-black text-slate-900 leading-tight">
                 {formatMoney(remainingBudgetToday)}{" "}
-                <span className="text-lg md:text-2xl text-slate-400">đ</span>
+                <span className="text-sm md:text-2xl text-slate-400">đ</span>
               </span>
               <div className="mt-4 w-full bg-slate-200/60 rounded-full h-2 overflow-hidden flex shadow-inner">
                 <div
@@ -826,7 +826,7 @@ export default function Dashboard() {
           )}
 
           <div
-            className={`col-span-1 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-5 md:p-6 rounded-[2rem] shadow-xl shadow-slate-900/30 flex flex-col justify-between text-white relative overflow-hidden ${isOverspent ? "col-span-2" : ""}`}
+            className={`col-span-1 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-5 md:p-6 rounded-[2rem] shadow-xl shadow-slate-900/30 flex flex-col justify-between text-white relative overflow-hidden ${isOverspent ? "md:col-span-2" : ""}`}
           >
             <div className="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl"></div>
             <div>
@@ -850,9 +850,9 @@ export default function Dashboard() {
                   Tổng Tài Sản
                 </span>
               </div>
-              <span className="text-2xl md:text-4xl font-black truncate relative z-10 drop-shadow-md">
+              <span className="text-lg sm:text-2xl md:text-4xl font-black leading-tight relative z-10 drop-shadow-md">
                 {formatMoney(totalAssets)}{" "}
-                <span className="text-lg md:text-2xl text-slate-400">đ</span>
+                <span className="text-sm md:text-2xl text-slate-400">đ</span>
               </span>
             </div>
             <button
@@ -877,12 +877,11 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* TẦNG 3: FORM & LỊCH SỬ (ĐÃ LÀM LẠI HOÀN TOÀN) */}
+        {/* TẦNG 3: FORM & LỊCH SỬ */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-          {/* ================= FORM THÊM GIAO DỊCH (LÀM LẠI) ================= */}
+          {/* ================= FORM THÊM GIAO DỊCH ================= */}
           <div className="bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-100 lg:col-span-1 relative overflow-hidden">
             <h2 className="text-base md:text-lg font-black text-slate-900 mb-6 flex items-center gap-3 relative z-10">
-              {/* Đã thay biểu tượng dấu + thành biểu tượng Ví tiền tinh tế */}
               <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
                 <svg
                   className="w-5 h-5"
@@ -989,7 +988,7 @@ export default function Dashboard() {
             </form>
           </div>
 
-          {/* ================= BẢNG LỊCH SỬ (LÀM LẠI CLEAN VÀ MINIMAL) ================= */}
+          {/* ================= BẢNG LỊCH SỬ ================= */}
           <div className="bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-100 lg:col-span-2 overflow-hidden flex flex-col relative">
             <h2 className="text-base md:text-lg font-black text-slate-900 mb-6 flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-600 border border-slate-200">
