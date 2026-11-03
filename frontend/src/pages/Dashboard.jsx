@@ -581,7 +581,7 @@ export default function Dashboard() {
                 </svg>
               </button>
             </div>
-            <p className="relative z-10 text-2xl md:text-4xl font-black truncate mb-5 drop-shadow-md">
+            <p className="relative z-10 text-xl sm:text-2xl md:text-4xl font-black mb-5 drop-shadow-md leading-tight">
               {formatMoney(balances.spending_balance)}
               <span className="text-sm md:text-base font-bold text-blue-300 ml-1.5">
                 đ
@@ -664,7 +664,7 @@ export default function Dashboard() {
                 </svg>
               </button>
             </div>
-            <p className="relative z-10 text-2xl md:text-4xl font-black truncate mb-5 drop-shadow-md">
+            <p className="relative z-10 text-xl sm:text-2xl md:text-4xl font-black mb-5 drop-shadow-md leading-tight">
               {formatMoney(balances.savings_balance)}
               <span className="text-sm md:text-base font-bold text-emerald-300 ml-1.5">
                 đ
@@ -742,7 +742,7 @@ export default function Dashboard() {
                 </svg>
               </button>
             </div>
-            <p className="relative z-10 text-2xl md:text-4xl font-black truncate mb-5 drop-shadow-md">
+            <p className="relative z-10 text-xl sm:text-2xl md:text-4xl font-black mb-5 drop-shadow-md leading-tight">
               {formatMoney(balances.emergency_balance)}
               <span className="text-sm md:text-base font-bold text-rose-300 ml-1.5">
                 đ
