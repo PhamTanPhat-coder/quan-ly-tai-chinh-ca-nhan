@@ -1,57 +1,77 @@
-const sqlite3 = require("sqlite3").verbose();
-const db = new sqlite3.Database("./finance.db", (err) => {
-  if (err) console.error("Lỗi kết nối DB:", err.message);
-  else console.log("Đã kết nối SQLite database.");
+const { Pool } = require("pg");
+
+// Sử dụng chuỗi kết nối bạn đã lấy từ Supabase (đã mã hóa ký tự @ thành %40)
+const pool = new Pool({
+  connectionString:
+    "postgresql://postgres.qvvksdzvixxcfkvgbdjq:Tanphat123%40@aws-0-ap-south-1.pooler.supabase.com:6543/postgres",
+  ssl: {
+    rejectUnauthorized: false,
+  },
 });
 
-db.serialize(() => {
-  // ĐÃ THÊM CỘT email UNIQUE
-  db.run(`CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    full_name TEXT,
-    username TEXT UNIQUE,
-    email TEXT UNIQUE, 
-    password TEXT,
-    has_setup INTEGER DEFAULT 0
-  )`);
+pool
+  .connect()
+  .then(() => console.log("Đã kết nối thành công với Supabase PostgreSQL! 🚀"))
+  .catch((err) => console.error("Lỗi kết nối Supabase:", err.stack));
 
-  db.run(`CREATE TABLE IF NOT EXISTS balances (
-    user_id INTEGER PRIMARY KEY,
-    spending_balance REAL DEFAULT 0,
-    savings_balance REAL DEFAULT 0,
-    emergency_balance REAL DEFAULT 0,
-    FOREIGN KEY(user_id) REFERENCES users(id)
-  )`);
+// Khởi tạo cấu trúc các bảng và Indexing (PostgreSQL)
+const initDB = async () => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        full_name TEXT,
+        username TEXT UNIQUE,
+        email TEXT UNIQUE, 
+        password TEXT,
+        has_setup INTEGER DEFAULT 0
+      );
+      
+      CREATE TABLE IF NOT EXISTS balances (
+        user_id INTEGER PRIMARY KEY REFERENCES users(id),
+        spending_balance REAL DEFAULT 0,
+        savings_balance REAL DEFAULT 0,
+        emergency_balance REAL DEFAULT 0
+      );
 
-  db.run(`CREATE TABLE IF NOT EXISTS categories (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER,
-    name TEXT,
-    FOREIGN KEY(user_id) REFERENCES users(id)
-  )`);
+      CREATE TABLE IF NOT EXISTS categories (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        name TEXT
+      );
 
-  db.run(`CREATE TABLE IF NOT EXISTS transactions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER,
-    amount REAL,
-    category_id INTEGER,
-    note TEXT,
-    transaction_date TEXT,
-    FOREIGN KEY(user_id) REFERENCES users(id),
-    FOREIGN KEY(category_id) REFERENCES categories(id)
-  )`);
+      CREATE TABLE IF NOT EXISTS transactions (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        amount REAL,
+        category_id INTEGER REFERENCES categories(id),
+        note TEXT,
+        transaction_date TEXT
+      );
 
-  db.run(`CREATE TABLE IF NOT EXISTS debts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER,
-    lender_or_borrower TEXT, 
-    person_name TEXT,
-    amount REAL,
-    borrowed_date TEXT,
-    due_date TEXT,
-    status TEXT DEFAULT 'Chưa trả',
-    FOREIGN KEY(user_id) REFERENCES users(id)
-  )`);
-});
+      CREATE TABLE IF NOT EXISTS debts (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        lender_or_borrower TEXT, 
+        person_name TEXT,
+        amount REAL,
+        borrowed_date TEXT,
+        due_date TEXT,
+        status TEXT DEFAULT 'Chưa trả'
+      );
 
-module.exports = db;
+      -- BỔ SUNG INDEXING ĐỂ TĂNG TỐC ĐỘ ĐỌC DỮ LIỆU
+      CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions(user_id);
+      CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(transaction_date);
+      CREATE INDEX IF NOT EXISTS idx_debts_user_id ON debts(user_id);
+      CREATE INDEX IF NOT EXISTS idx_categories_user_id ON categories(user_id);
+    `);
+    console.log("Đã khởi tạo xong cấu trúc bảng và Indexing trên Supabase.");
+  } catch (err) {
+    console.error("Lỗi tạo bảng:", err);
+  }
+};
+
+initDB();
+
+module.exports = pool;

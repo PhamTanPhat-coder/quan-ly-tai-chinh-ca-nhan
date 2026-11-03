@@ -2,20 +2,34 @@ const db = require("./db");
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 
-// Hàm hỗ trợ Promisify
-const query = (sql, params = []) =>
-  new Promise((resolve, reject) => {
-    db.all(sql, params, (err, rows) => (err ? reject(err) : resolve(rows)));
-  });
+// Hàm hỗ trợ Promisify (Tương thích PostgreSQL - Supabase)
+// PostgreSQL sử dụng thư viện 'pg' hỗ trợ sẵn Promise, nên ta bọc lại cho giống API cũ
+const query = async (sql, params = []) => {
+  // Chuyển đổi dấu '?' của SQLite thành '$1, $2, $3...' của PostgreSQL
+  let pgSql = sql;
+  let paramIndex = 1;
+  while (pgSql.includes("?")) {
+    pgSql = pgSql.replace("?", `$${paramIndex}`);
+    paramIndex++;
+  }
+  const result = await db.query(pgSql, params);
+  return result.rows;
+};
 
-const run = (sql, params = []) =>
-  new Promise((resolve, reject) => {
-    db.run(sql, params, function (err) {
-      if (err) reject(err);
-      else resolve(this);
-    });
-  });
-
+const run = async (sql, params = []) => {
+  let pgSql = sql;
+  let paramIndex = 1;
+  while (pgSql.includes("?")) {
+    pgSql = pgSql.replace("?", `$${paramIndex}`);
+    paramIndex++;
+  }
+  const result = await db.query(pgSql, params);
+  // Mô phỏng thuộc tính 'lastID' của SQLite bằng cách lấy id từ mảng rows nếu có RETURNING
+  if (result.rows && result.rows.length > 0) {
+    return { lastID: result.rows[0].id };
+  }
+  return { lastID: null };
+};
 // =====================================================================
 // ================= 1. QUẢN LÝ QUỸ (BALANCES) =========================
 // =====================================================================
@@ -208,8 +222,8 @@ exports.getTransactions = async (req, res) => {
       SELECT t.*, c.name as category_name 
       FROM transactions t 
       JOIN categories c ON t.category_id = c.id 
-      WHERE t.user_id = ? 
-      ORDER BY t.id DESC LIMIT 15
+      WHERE t.user_id = $1 
+      ORDER BY t.transaction_date DESC
     `,
       [userId],
     );
@@ -443,9 +457,9 @@ exports.registerUser = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Lưu User và lấy ra ID
+    // Lưu User và lấy ra ID (PostgreSQL cần thêm RETURNING id)
     const result = await run(
-      `INSERT INTO users (full_name, username, email, password) VALUES (?, ?, ?, ?)`,
+      `INSERT INTO users (full_name, username, email, password) VALUES (?, ?, ?, ?) RETURNING id`,
       [full_name, username, email, hashedPassword],
     );
     const userId = result.lastID;

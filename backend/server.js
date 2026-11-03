@@ -70,6 +70,7 @@ cron.schedule("59 23 * * *", () => {
   }
 });
 
-app.listen(5000, () => {
-  console.log("Backend đang chạy trên cổng 5000");
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Backend đang chạy trên cổng ${PORT}`);
 });

@@ -81,11 +81,27 @@ export default function Reports() {
     setEndDate(end.toISOString().split("T")[0]);
   };
 
+  const handleCustomDateChange = (type, value) => {
+    setFilterMode("custom");
+    if (type === "start") setStartDate(value);
+    if (type === "end") setEndDate(value);
+  };
+
+  // LỌC GIAO DỊCH THEO NGÀY
   const filteredTransactions = transactions.filter((t) => {
     if (!startDate && !endDate) return true;
     const tDateStr = t.transaction_date ? t.transaction_date.split("T")[0] : "";
     if (startDate && tDateStr < startDate) return false;
     if (endDate && tDateStr > endDate) return false;
+    return true;
+  });
+
+  // LỌC CẢ NỢ NẦN THEO NGÀY (CẢI TIẾN)
+  const filteredDebts = debts.filter((d) => {
+    if (!startDate && !endDate) return true;
+    const dDateStr = d.borrowed_date ? d.borrowed_date.split("T")[0] : "";
+    if (startDate && dDateStr < startDate) return false;
+    if (endDate && dDateStr > endDate) return false;
     return true;
   });
 
@@ -99,7 +115,7 @@ export default function Reports() {
           isAutoAnalyze: true,
           transactions: filteredTransactions,
           balances,
-          debts,
+          debts: filteredDebts,
         });
         setAutoAnalysisText(res.data.reply);
       } catch (error) {
@@ -115,7 +131,6 @@ export default function Reports() {
     return () => clearTimeout(timeoutId);
   }, [startDate, endDate, balances]);
 
-  // HÀM XỬ LÝ TEXT TỪ AI THÀNH CÁC KHỐI CHUYÊN NGHIỆP
   const parseAnalysis = (text) => {
     if (!text) return [];
     const lines = text
@@ -199,6 +214,9 @@ export default function Reports() {
     return icons[name] || "📌";
   };
 
+  // =================================================================
+  // 1. DỮ LIỆU BIỂU ĐỒ TRÒN (Tính cả Chi tiêu + Nợ theo ngày đang lọc)
+  // =================================================================
   const categoryTotals = {};
   filteredTransactions.forEach((t) => {
     const cat = t.category_name || "Khác";
@@ -207,27 +225,24 @@ export default function Reports() {
 
   let totalIOwe = 0;
   let totalOwedToMe = 0;
-  debts.forEach((d) => {
+  filteredDebts.forEach((d) => {
+    // Sử dụng filteredDebts thay vì debts
     if (d.lender_or_borrower === "Nợ người ta") totalIOwe += d.amount;
     else totalOwedToMe += d.amount;
   });
 
-  // Chỉ lấy các danh mục chi tiêu thông thường
   const mergedChartLabels = [...Object.keys(categoryTotals)];
   const mergedChartData = [...Object.values(categoryTotals)];
 
-  // Nếu có nợ người ta (> 0) thì mới đẩy vào biểu đồ
   if (totalIOwe > 0) {
     mergedChartLabels.push("Nợ người ta");
     mergedChartData.push(totalIOwe);
   }
-
-  // Nếu có người khác nợ mình (> 0) thì mới đẩy vào biểu đồ
   if (totalOwedToMe > 0) {
     mergedChartLabels.push("Cho mượn");
     mergedChartData.push(totalOwedToMe);
   }
-  // THÊM BẢNG MÀU ĐỘNG CHO 20 DANH MỤC
+
   const chartColors = [
     "#3B82F6",
     "#10B981",
@@ -262,10 +277,20 @@ export default function Reports() {
     ],
   };
 
+  // =================================================================
+  // 2. DỮ LIỆU BIỂU ĐỒ CỘT THEO NGÀY (Cộng gộp cả Giao dịch + Nợ)
+  // =================================================================
   const dailyTotals = {};
   filteredTransactions.forEach((t) => {
     const dateStr = t.transaction_date.split("T")[0];
     dailyTotals[dateStr] = (dailyTotals[dateStr] || 0) + t.amount;
+  });
+  // Cộng thêm Nợ vào các ngày tương ứng
+  filteredDebts.forEach((d) => {
+    if (d.borrowed_date) {
+      const dateStr = d.borrowed_date.split("T")[0];
+      dailyTotals[dateStr] = (dailyTotals[dateStr] || 0) + d.amount;
+    }
   });
 
   const sortedDates = Object.keys(dailyTotals).sort();
@@ -273,10 +298,44 @@ export default function Reports() {
     labels: sortedDates.map((d) => new Date(d).toLocaleDateString("vi-VN")),
     datasets: [
       {
-        label: "Tổng chi (VNĐ)",
+        label: "Tổng dòng tiền xuất (VNĐ)",
         data: sortedDates.map((d) => dailyTotals[d]),
         backgroundColor: "#3B82F6",
         borderRadius: 4,
+      },
+    ],
+  };
+
+  // =================================================================
+  // 3. BIỂU ĐỒ CỘT SO SÁNH CÁC THÁNG (Cộng gộp toàn bộ Giao dịch + Nợ)
+  // =================================================================
+  const monthlyTotalsAgg = {};
+  transactions.forEach((t) => {
+    if (!t.transaction_date) return;
+    const d = new Date(t.transaction_date);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    monthlyTotalsAgg[key] = (monthlyTotalsAgg[key] || 0) + t.amount;
+  });
+  // Cộng thêm toàn bộ Nợ vào các tháng
+  debts.forEach((d) => {
+    if (!d.borrowed_date) return;
+    const dObj = new Date(d.borrowed_date);
+    const key = `${dObj.getFullYear()}-${String(dObj.getMonth() + 1).padStart(2, "0")}`;
+    monthlyTotalsAgg[key] = (monthlyTotalsAgg[key] || 0) + d.amount;
+  });
+
+  const sortedMonths = Object.keys(monthlyTotalsAgg).sort();
+  const monthlyChartData = {
+    labels: sortedMonths.map((k) => {
+      const [y, m] = k.split("-");
+      return `Tháng ${parseInt(m)}/${y}`;
+    }),
+    datasets: [
+      {
+        label: "Tổng dòng tiền xuất tháng (VNĐ)",
+        data: sortedMonths.map((k) => monthlyTotalsAgg[k]),
+        backgroundColor: "#10B981",
+        borderRadius: 6,
       },
     ],
   };
@@ -300,7 +359,7 @@ export default function Reports() {
         message: userMsg,
         transactions: filteredTransactions,
         balances,
-        debts,
+        debts: filteredDebts,
       });
       setChatHistory((prev) => [...prev, { role: "ai", text: res.data.reply }]);
     } catch (error) {
@@ -315,8 +374,8 @@ export default function Reports() {
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 relative">
-      {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 gap-4">
+      {/* HEADER & FILTER */}
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 gap-6">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 text-white">
             <svg
@@ -343,29 +402,52 @@ export default function Reports() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => handleQuickFilter("today")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition ${filterMode === "today" ? "bg-blue-600 text-white shadow-md shadow-blue-500/20" : "bg-slate-100 text-slate-600"}`}
-          >
-            Hôm nay
-          </button>
-          <button
-            onClick={() => handleQuickFilter("week")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition ${filterMode === "week" ? "bg-blue-600 text-white shadow-md shadow-blue-500/20" : "bg-slate-100 text-slate-600"}`}
-          >
-            7 ngày
-          </button>
-          <button
-            onClick={() => handleQuickFilter("month")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition ${filterMode === "month" ? "bg-blue-600 text-white shadow-md shadow-blue-500/20" : "bg-slate-100 text-slate-600"}`}
-          >
-            Tháng này
-          </button>
+        {/* KHU VỰC BỘ LỌC */}
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full xl:w-auto">
+          {/* Lọc nhanh */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => handleQuickFilter("today")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition ${filterMode === "today" ? "bg-blue-600 text-white shadow-md shadow-blue-500/20" : "bg-slate-100 text-slate-600"}`}
+            >
+              Hôm nay
+            </button>
+            <button
+              onClick={() => handleQuickFilter("week")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition ${filterMode === "week" ? "bg-blue-600 text-white shadow-md shadow-blue-500/20" : "bg-slate-100 text-slate-600"}`}
+            >
+              7 ngày
+            </button>
+            <button
+              onClick={() => handleQuickFilter("month")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition ${filterMode === "month" ? "bg-blue-600 text-white shadow-md shadow-blue-500/20" : "bg-slate-100 text-slate-600"}`}
+            >
+              Tháng này
+            </button>
+          </div>
+
+          <div className="hidden md:block w-px h-8 bg-slate-200"></div>
+
+          {/* Lọc tùy chỉnh A -> B */}
+          <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-200 w-full md:w-auto">
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => handleCustomDateChange("start", e.target.value)}
+              className="bg-transparent text-xs font-semibold text-slate-700 outline-none w-full md:w-auto"
+            />
+            <span className="text-slate-400 font-bold">➔</span>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => handleCustomDateChange("end", e.target.value)}
+              className="bg-transparent text-xs font-semibold text-slate-700 outline-none w-full md:w-auto"
+            />
+          </div>
         </div>
       </div>
 
-      {/* BIỂU ĐỒ */}
+      {/* BIỂU ĐỒ TRÒN VÀ NGÀY */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center col-span-1">
           <h2 className="font-black text-slate-800 mb-6 w-full text-left">
@@ -382,7 +464,7 @@ export default function Reports() {
 
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center col-span-1 lg:col-span-2">
           <h2 className="font-black text-slate-800 mb-6 w-full text-left">
-            📊 Tần Suất Chi Tiêu Theo Ngày
+            📊 Dòng Tiền Xuất Theo Ngày
           </h2>
           {sortedDates.length === 0 ? (
             <p className="text-slate-400 text-sm py-12">Chưa có dữ liệu.</p>
@@ -395,6 +477,30 @@ export default function Reports() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* BIỂU ĐỒ SO SÁNH THÁNG MỚI */}
+      <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center w-full">
+        <div className="w-full text-left mb-6">
+          <h2 className="font-black text-slate-800 text-lg">
+            📈 Tổng Quan Dòng Tiền Xuất Các Tháng
+          </h2>
+          <p className="text-xs text-slate-500 mt-1">
+            Bao gồm toàn bộ giao dịch mua sắm và tiền xuất ra cho vay/mượn nợ
+          </p>
+        </div>
+        {sortedMonths.length === 0 ? (
+          <p className="text-slate-400 text-sm py-12">
+            Chưa có đủ dữ liệu để thống kê theo tháng.
+          </p>
+        ) : (
+          <div className="w-full h-64 flex justify-center">
+            <Bar
+              data={monthlyChartData}
+              options={{ maintainAspectRatio: false, responsive: true }}
+            />
+          </div>
+        )}
       </div>
 
       {/* 🌟 GIAO DIỆN NHẬN ĐỊNH AI */}
@@ -411,7 +517,7 @@ export default function Reports() {
               AI PHÂN TÍCH THÔNG MINH
             </h2>
             <p className="text-slate-400 text-xs mt-1 font-medium">
-              Đánh giá tự động dựa trên thói quen thu chi của bạn
+              Đánh giá tự động dựa trên khoảng thời gian đang lọc
             </p>
           </div>
         </div>
@@ -450,7 +556,7 @@ export default function Reports() {
         )}
       </div>
 
-      {/* LỊCH SỬ GIAO DỊCH LÀM LẠI CHO ĐỒNG BỘ */}
+      {/* LỊCH SỬ GIAO DỊCH */}
       <div className="bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-100 space-y-4">
         <h2 className="text-lg font-black text-slate-900 flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-600 border border-slate-200">
@@ -526,7 +632,7 @@ export default function Reports() {
         </div>
       </div>
 
-      {/* CHATBOT WIDGET (GIỮ NGUYÊN) */}
+      {/* CHATBOT WIDGET */}
       <button
         onClick={() => setIsChatOpen(!isChatOpen)}
         className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-2xl shadow-blue-600/40 hover:scale-110 transition-transform z-50"
