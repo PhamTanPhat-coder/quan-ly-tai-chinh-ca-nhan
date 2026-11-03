@@ -374,7 +374,7 @@ export default function Dashboard() {
       <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-5 md:space-y-8 relative z-10">
         {/* ================= MODAL CHỌN DANH MỤC (THAY THẾ DROP DOWN) ================= */}
         {showCategoryModal && (
-          <div className="fixed inset-0 bg-slate-900/90 md:bg-slate-900/60 md:backdrop-blur-sm flex items-center justify-center p-4 z-[100] transition-all">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100] transition-all">
             <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-fade-in-up">
               <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                 <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
@@ -462,7 +462,7 @@ export default function Dashboard() {
         {/* POP-UP CẢNH BÁO HỤT QUỸ (Giữ nguyên) */}
         {showPopup && (
           <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 z-50 transition-opacity">
-            <div className="bg-white md:bg-white/90 md:backdrop-blur-2xl p-6 md:p-8 rounded-[2rem] max-w-lg w-full shadow-lg md:shadow-2xl border border-white/20 flex flex-col items-center text-center">
+            <div className="bg-white/90 backdrop-blur-2xl p-6 md:p-8 rounded-[2rem] max-w-lg w-full shadow-2xl border border-white/20 flex flex-col items-center text-center">
               <div className="w-20 h-20 bg-gradient-to-br from-rose-400 to-rose-600 rounded-full flex items-center justify-center text-white mb-5 shadow-lg shadow-rose-500/30">
                 <svg
                   className="w-10 h-10"
@@ -524,7 +524,7 @@ export default function Dashboard() {
         {/* TẦNG 1: 3 QUỸ THÁC NƯỚC (GIỮ NGUYÊN VÌ ĐÃ ĐẸP) */}
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {/* Quỹ Chi Tiêu */}
-          <div className="col-span-1 bg-gradient-to-br from-blue-700 via-indigo-800 to-blue-900 p-4 md:p-7 rounded-[2rem] shadow-sm md:shadow-xl md:shadow-blue-900/20 text-white flex flex-col justify-between relative overflow-hidden group">
+          <div className="col-span-1 bg-gradient-to-br from-blue-700 via-indigo-800 to-blue-900 p-5 md:p-7 rounded-[2rem] shadow-xl shadow-blue-900/20 text-white flex flex-col justify-between relative overflow-hidden group">
             <svg
               className="absolute top-0 right-0 w-32 h-32 text-white/5 transform translate-x-8 -translate-y-8 group-hover:scale-110 transition-transform duration-500"
               fill="currentColor"
@@ -776,9 +776,9 @@ export default function Dashboard() {
                   Đã tiêu lố {formatMoney(overspentAmount)}đ hôm nay
                 </span>
               </div>
-              <span className="text-sm md:text-lg font-bold text-rose-900">
+              <span className="text-xs md:text-base font-bold text-rose-900">
                 Hạn mức ép buộc từ mai:{" "}
-                <span className="text-2xl md:text-4xl font-black block mt-1 text-rose-950">
+                <span className="text-lg sm:text-xl md:text-3xl font-black block mt-1 text-rose-950 truncate">
                   {formatMoney(strictBudgetTomorrow)} đ / ngày
                 </span>
               </span>
