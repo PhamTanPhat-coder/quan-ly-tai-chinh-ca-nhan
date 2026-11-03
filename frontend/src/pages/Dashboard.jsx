@@ -754,14 +754,15 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* TẦNG 2: NGÂN SÁCH ĐỘNG & TỔNG TÀI SẢN (Grid: 1 cột trên mobile, 2 cột trên desktop) */}
+        {/* TẦNG 2: NGÂN SÁCH ĐỘNG & TỔNG TÀI SẢN */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           {isOverspent ? (
-            <div className="col-span-1 md:col-span-2 bg-gradient-to-br from-rose-50 to-orange-50 border border-rose-200 p-5 md:p-6 rounded-[2rem] flex flex-col justify-center relative shadow-lg shadow-rose-100/50">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-full bg-rose-200 flex items-center justify-center animate-pulse">
+            <div className="col-span-1 bg-gradient-to-br from-purple-800 via-indigo-950 to-slate-950 p-5 md:p-6 rounded-[2rem] shadow-xl shadow-purple-950/30 text-white flex flex-col justify-between relative overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-500/20 via-transparent to-transparent opacity-60"></div>
+              <div className="flex items-center gap-2 mb-3 relative z-10">
+                <div className="w-8 h-8 rounded-full bg-purple-500/30 flex items-center justify-center animate-pulse border border-purple-400/30">
                   <svg
-                    className="w-4 h-4 text-rose-700"
+                    className="w-4 h-4 text-purple-200"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -772,68 +773,73 @@ export default function Dashboard() {
                     />
                   </svg>
                 </div>
-                <span className="text-xs md:text-sm font-bold text-rose-800 uppercase tracking-wide">
+                <span className="text-xs md:text-sm font-bold text-purple-200 uppercase tracking-wide">
                   Đã tiêu lố {formatMoney(overspentAmount)}đ hôm nay
                 </span>
               </div>
-              <span className="text-xs md:text-base font-bold text-rose-900">
+              <span className="text-xs md:text-base font-bold text-purple-300 relative z-10">
                 Hạn mức ép buộc từ mai:{" "}
-                <span className="text-lg sm:text-xl md:text-3xl font-black block mt-1 text-rose-950 truncate">
+                <span className="text-lg sm:text-xl md:text-3xl font-black block mt-1 text-white truncate drop-shadow-md">
                   {formatMoney(strictBudgetTomorrow)} đ / ngày
                 </span>
               </span>
-              <div className="mt-5 w-full bg-rose-200/50 rounded-full h-2 overflow-hidden shadow-inner">
-                <div className="bg-gradient-to-r from-rose-500 to-orange-500 h-full rounded-full w-full"></div>
+              <div className="mt-5 w-full bg-purple-950/80 rounded-full h-2 overflow-hidden border border-purple-500/20 relative z-10">
+                <div className="bg-gradient-to-r from-purple-400 to-pink-400 h-full rounded-full w-full"></div>
               </div>
             </div>
           ) : (
-            <div className="col-span-1 bg-white/70 backdrop-blur-xl border border-white/50 p-5 md:p-6 rounded-[2rem] shadow-xl shadow-slate-200/50 flex flex-col justify-center">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center">
-                  <svg
-                    className="w-4 h-4 text-teal-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M13 10V3L4 14h7v7l9-11h-7z"
-                    />
-                  </svg>
+            <div className="col-span-1 bg-gradient-to-tr from-sky-600 via-indigo-700 to-pink-600 p-5 md:p-6 rounded-[2rem] shadow-xl shadow-indigo-950/20 text-white flex flex-col justify-between relative overflow-hidden">
+              {/* Hiệu ứng mesh gradient pha trộn màu kiểu iPhone */}
+              <div className="absolute top-0 right-0 w-36 h-36 bg-pink-400/30 rounded-full blur-2xl pointer-events-none"></div>
+              <div className="absolute bottom-0 left-0 w-36 h-36 bg-cyan-400/20 rounded-full blur-2xl pointer-events-none"></div>
+              <div>
+                <div className="flex items-center gap-2 mb-3 relative z-10">
+                  <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20">
+                    <svg
+                      className="w-4 h-4 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M13 10V3L4 14h7v7l9-11h-7z"
+                      />
+                    </svg>
+                  </div>
+                  <span className="text-xs md:text-sm font-bold text-sky-100 uppercase tracking-wide">
+                    Gợi ý tiêu hôm nay
+                  </span>
                 </div>
-                <span className="text-xs md:text-sm font-bold text-teal-800 uppercase tracking-wide">
-                  Gợi ý tiêu hôm nay
+                <span className="text-lg sm:text-2xl md:text-4xl font-black text-white leading-tight relative z-10 drop-shadow-md">
+                  {formatMoney(remainingBudgetToday)}{" "}
+                  <span className="text-sm md:text-2xl text-pink-200">đ</span>
                 </span>
               </div>
-              <span className="text-lg sm:text-2xl md:text-4xl font-black text-slate-900 leading-tight">
-                {formatMoney(remainingBudgetToday)}{" "}
-                <span className="text-sm md:text-2xl text-slate-400">đ</span>
-              </span>
-              <div className="mt-4 w-full bg-slate-200/60 rounded-full h-2 overflow-hidden flex shadow-inner">
-                <div
-                  className="bg-gradient-to-r from-teal-400 to-emerald-500 h-full rounded-full transition-all duration-1000 ease-out"
-                  style={{ width: `${spentPercentage}%` }}
-                ></div>
-              </div>
-              <div className="flex justify-between items-center mt-2 text-[10px] md:text-xs font-semibold text-slate-500">
-                <span>Đã tiêu {spentPercentage}%</span>
-                <span>Gốc: {formatMoney(originalBudgetForToday)}đ</span>
+              <div className="relative z-10 mt-4">
+                <div className="w-full bg-black/30 rounded-full h-2 overflow-hidden flex border border-white/10 backdrop-blur-sm">
+                  <div
+                    className="bg-gradient-to-r from-cyan-300 via-white to-pink-300 h-full rounded-full transition-all duration-1000 ease-out"
+                    style={{ width: `${spentPercentage}%` }}
+                  ></div>
+                </div>
+                <div className="flex justify-between items-center mt-2 text-[10px] md:text-xs font-semibold text-sky-100/90">
+                  <span>Đã tiêu {spentPercentage}%</span>
+                  <span>Gốc: {formatMoney(originalBudgetForToday)}đ</span>
+                </div>
               </div>
             </div>
           )}
 
-          <div
-            className={`col-span-1 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-5 md:p-6 rounded-[2rem] shadow-xl shadow-slate-900/30 flex flex-col justify-between text-white relative overflow-hidden ${isOverspent ? "md:col-span-2" : ""}`}
-          >
-            <div className="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl"></div>
+          <div className="col-span-1 bg-gradient-to-br from-amber-600 via-orange-600 to-amber-800 p-5 md:p-6 rounded-[2rem] shadow-xl shadow-orange-950/30 flex flex-col justify-between text-white relative overflow-hidden">
+            <div className="absolute -top-12 -right-12 w-32 h-32 bg-white/15 rounded-full blur-2xl"></div>
             <div>
               <div className="flex items-center gap-2 mb-2 relative z-10">
-                <div className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
                   <svg
-                    className="w-4 h-4 text-blue-300"
+                    className="w-4 h-4 text-white"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -846,18 +852,18 @@ export default function Dashboard() {
                     />
                   </svg>
                 </div>
-                <span className="text-xs md:text-sm font-bold text-slate-300 uppercase tracking-wide">
+                <span className="text-xs md:text-sm font-bold text-amber-100 uppercase tracking-wide">
                   Tổng Tài Sản
                 </span>
               </div>
               <span className="text-lg sm:text-2xl md:text-4xl font-black leading-tight relative z-10 drop-shadow-md">
                 {formatMoney(totalAssets)}{" "}
-                <span className="text-sm md:text-2xl text-slate-400">đ</span>
+                <span className="text-sm md:text-2xl text-amber-200">đ</span>
               </span>
             </div>
             <button
               onClick={handleResetData}
-              className="relative z-10 w-full bg-white/10 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 font-bold text-[10px] md:text-sm py-3 rounded-xl mt-4 backdrop-blur-md transition flex items-center justify-center gap-2 border border-white/5"
+              className="relative z-10 w-full bg-white/15 hover:bg-rose-500/20 text-white hover:text-rose-200 font-bold text-[10px] md:text-sm py-3 rounded-xl md:mt-4 mt-3 backdrop-blur-md transition flex items-center justify-center gap-2 border border-white/10"
             >
               <svg
                 className="w-4 h-4"
