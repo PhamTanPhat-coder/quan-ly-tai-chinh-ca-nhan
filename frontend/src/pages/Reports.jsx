@@ -47,9 +47,15 @@ export default function Reports() {
 
   useEffect(() => {
     Promise.all([
-      axios.get(`http://localhost:5000/api/transactions/${userId}`),
-      axios.get(`http://localhost:5000/api/balances/${userId}`),
-      axios.get(`http://localhost:5000/api/debts/${userId}`),
+      axios.get(
+        `https://finance-backend-6wv7.onrender.com/api/transactions/${userId}`,
+      ),
+      axios.get(
+        `https://finance-backend-6wv7.onrender.com/api/balances/${userId}`,
+      ),
+      axios.get(
+        `https://finance-backend-6wv7.onrender.com/api/debts/${userId}`,
+      ),
     ]).then(([transRes, balRes, debtsRes]) => {
       setTransactions(transRes.data);
       setBalances(balRes.data);
@@ -111,12 +117,15 @@ export default function Reports() {
     const fetchAutoAnalysis = async () => {
       setIsAutoAnalyzing(true);
       try {
-        const res = await axios.post("http://localhost:5000/api/ai-chat", {
-          isAutoAnalyze: true,
-          transactions: filteredTransactions,
-          balances,
-          debts: filteredDebts,
-        });
+        const res = await axios.post(
+          "https://finance-backend-6wv7.onrender.com/api/ai-chat",
+          {
+            isAutoAnalyze: true,
+            transactions: filteredTransactions,
+            balances,
+            debts: filteredDebts,
+          },
+        );
         setAutoAnalysisText(res.data.reply);
       } catch (error) {
         setAutoAnalysisText(
@@ -354,13 +363,16 @@ export default function Reports() {
     setIsAiThinking(true);
 
     try {
-      const res = await axios.post("http://localhost:5000/api/ai-chat", {
-        isAutoAnalyze: false,
-        message: userMsg,
-        transactions: filteredTransactions,
-        balances,
-        debts: filteredDebts,
-      });
+      const res = await axios.post(
+        "https://finance-backend-6wv7.onrender.com/api/ai-chat",
+        {
+          isAutoAnalyze: false,
+          message: userMsg,
+          transactions: filteredTransactions,
+          balances,
+          debts: filteredDebts,
+        },
+      );
       setChatHistory((prev) => [...prev, { role: "ai", text: res.data.reply }]);
     } catch (error) {
       setChatHistory((prev) => [

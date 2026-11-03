@@ -30,8 +30,12 @@ export default function Settings() {
     const fetchData = async () => {
       try {
         const [userRes, balRes] = await Promise.all([
-          axios.get(`http://localhost:5000/api/user/${userId}`),
-          axios.get(`http://localhost:5000/api/balances/${userId}`),
+          axios.get(
+            `https://finance-backend-6wv7.onrender.com/api/user/${userId}`,
+          ),
+          axios.get(
+            `https://finance-backend-6wv7.onrender.com/api/balances/${userId}`,
+          ),
         ]);
         setEmail(userRes.data.email || "");
         setFunds({
@@ -51,10 +55,13 @@ export default function Settings() {
     e.preventDefault();
     setEmailStatus({ type: "", message: "" });
     try {
-      const res = await axios.put("http://localhost:5000/api/change-email", {
-        userId,
-        newEmail: email,
-      });
+      const res = await axios.put(
+        "https://finance-backend-6wv7.onrender.com/api/change-email",
+        {
+          userId,
+          newEmail: email,
+        },
+      );
       setEmailStatus({ type: "success", message: res.data.message });
     } catch (err) {
       setEmailStatus({
@@ -69,11 +76,14 @@ export default function Settings() {
     e.preventDefault();
     setFundStatus({ type: "", message: "" });
     try {
-      await axios.put(`http://localhost:5000/api/balances/${userId}`, {
-        spending: funds.spending,
-        savings: funds.savings,
-        emergency: funds.emergency,
-      });
+      await axios.put(
+        `https://finance-backend-6wv7.onrender.com/api/balances/${userId}`,
+        {
+          spending: funds.spending,
+          savings: funds.savings,
+          emergency: funds.emergency,
+        },
+      );
       setFundStatus({
         type: "success",
         message: "Đã cập nhật lại số dư các quỹ thành công!",
@@ -107,7 +117,7 @@ export default function Settings() {
     setIsChangingPass(true);
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/change-password",
+        "https://finance-backend-6wv7.onrender.com/api/change-password",
         {
           userId,
           oldPassword: passwords.oldPassword,
@@ -131,7 +141,9 @@ export default function Settings() {
     if (confirmText !== "XOA")
       return alert('Gõ chính xác "XOA" để xóa dữ liệu!');
     try {
-      await axios.delete(`http://localhost:5000/api/reset-data/${userId}`);
+      await axios.delete(
+        `https://finance-backend-6wv7.onrender.com/api/reset-data/${userId}`,
+      );
       alert("Đã reset toàn bộ dữ liệu hệ thống về 0 thành công.");
       localStorage.setItem("hasSetup", "false");
       window.location.href = "/setup";

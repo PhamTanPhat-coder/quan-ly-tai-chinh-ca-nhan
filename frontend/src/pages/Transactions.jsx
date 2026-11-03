@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-const API_URL = "http://localhost:5000";
+const API_URL = "https://finance-backend-6wv7.onrender.com";
 
 export default function Transactions() {
   const [transactions, setTransactions] = useState([]);

@@ -30,11 +30,14 @@ export default function SetupFunds() {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.put(`http://localhost:5000/api/balances/${userId}`, {
-        spending: parseFloat(funds.spending) || 0,
-        savings: parseFloat(funds.savings) || 0,
-        emergency: parseFloat(funds.emergency) || 0,
-      });
+      await axios.put(
+        `https://finance-backend-6wv7.onrender.com/api/balances/${userId}`,
+        {
+          spending: parseFloat(funds.spending) || 0,
+          savings: parseFloat(funds.savings) || 0,
+          emergency: parseFloat(funds.emergency) || 0,
+        },
+      );
       localStorage.setItem("hasSetup", "true");
       navigate("/");
     } catch (err) {

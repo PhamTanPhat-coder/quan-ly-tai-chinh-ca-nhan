@@ -19,7 +19,9 @@ export default function Debts() {
 
   const loadDebts = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/debts/${userId}`);
+      const res = await axios.get(
+        `https://finance-backend-6wv7.onrender.com/api/debts/${userId}`,
+      );
       // Lọc lại chỉ lấy các khoản "Chưa trả" để hiển thị trên bảng và banner
       setDebts(res.data.filter((d) => d.status === "Chưa trả"));
     } catch (err) {
@@ -58,7 +60,7 @@ export default function Debts() {
     setIsProcessing(true);
 
     try {
-      await axios.post("http://localhost:5000/api/debts", {
+      await axios.post("https://finance-backend-6wv7.onrender.com/api/debts", {
         user_id: userId,
         ...form,
         amount: parseFloat(form.amount),
@@ -85,13 +87,18 @@ export default function Debts() {
 
     try {
       // 1. Cập nhật trạng thái thành "Đã trả" để Backend tự động tính toán dòng tiền vào Quỹ Tiết Kiệm
-      await axios.put(`http://localhost:5000/api/debts/${d.id}/status`, {
-        status: "Đã trả",
-        user_id: userId,
-      });
+      await axios.put(
+        `https://finance-backend-6wv7.onrender.com/api/debts/${d.id}/status`,
+        {
+          status: "Đã trả",
+          user_id: userId,
+        },
+      );
 
       // 2. Xóa luôn bản ghi khỏi cơ sở dữ liệu để nó biến mất khỏi giao diện
-      await axios.delete(`http://localhost:5000/api/debts/${d.id}`);
+      await axios.delete(
+        `https://finance-backend-6wv7.onrender.com/api/debts/${d.id}`,
+      );
 
       // 3. Tải lại danh sách
       loadDebts();

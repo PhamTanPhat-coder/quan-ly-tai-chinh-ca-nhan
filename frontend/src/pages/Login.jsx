@@ -20,10 +20,13 @@ export default function Login() {
     setIsLoading(true);
     setError("");
     try {
-      const res = await axios.post("http://localhost:5000/api/login", {
-        username,
-        password,
-      });
+      const res = await axios.post(
+        "https://finance-backend-6wv7.onrender.com/api/login",
+        {
+          username,
+          password,
+        },
+      );
       localStorage.setItem("isAuth", "true");
       localStorage.setItem("userId", res.data.user.id);
       localStorage.setItem("fullName", res.data.user.fullName);
@@ -51,7 +54,7 @@ export default function Login() {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/forgot-password",
+        "https://finance-backend-6wv7.onrender.com/api/forgot-password",
         { email: forgotEmail },
       );
       setForgotStatus({ type: "success", message: res.data.message });

@@ -58,12 +58,15 @@ export default function Register() {
 
     setIsLoading(true);
     try {
-      await axios.post("http://localhost:5000/api/register", {
-        full_name: formData.fullName,
-        username: formData.username,
-        email: formData.email, // Gửi email xuống Backend
-        password: formData.password,
-      });
+      await axios.post(
+        "https://finance-backend-6wv7.onrender.com/api/register",
+        {
+          full_name: formData.fullName,
+          username: formData.username,
+          email: formData.email, // Gửi email xuống Backend
+          password: formData.password,
+        },
+      );
 
       setSuccess("Đăng ký thành công! Đang chuyển hướng về trang đăng nhập...");
       setTimeout(() => navigate("/login"), 1500);

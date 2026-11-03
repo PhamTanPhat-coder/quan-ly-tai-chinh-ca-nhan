@@ -34,9 +34,15 @@ export default function Dashboard() {
   const loadData = async () => {
     try {
       const [balRes, catRes, transRes] = await Promise.all([
-        axios.get(`http://localhost:5000/api/balances/${userId}`),
-        axios.get(`http://localhost:5000/api/categories/${userId}`),
-        axios.get(`http://localhost:5000/api/transactions/${userId}`),
+        axios.get(
+          `https://finance-backend-6wv7.onrender.com/api/balances/${userId}`,
+        ),
+        axios.get(
+          `https://finance-backend-6wv7.onrender.com/api/categories/${userId}`,
+        ),
+        axios.get(
+          `https://finance-backend-6wv7.onrender.com/api/transactions/${userId}`,
+        ),
       ]);
       setBalances(balRes.data);
       setCategories(catRes.data);
@@ -181,7 +187,7 @@ export default function Dashboard() {
 
     try {
       const res = await axios.put(
-        `http://localhost:5000/api/balances/${userId}`,
+        `https://finance-backend-6wv7.onrender.com/api/balances/${userId}`,
         updatedBalances,
       );
       if (res.data && res.data.balances) {
@@ -228,11 +234,14 @@ export default function Dashboard() {
     }
 
     try {
-      await axios.put(`http://localhost:5000/api/balances/${userId}`, {
-        spending,
-        savings,
-        emergency,
-      });
+      await axios.put(
+        `https://finance-backend-6wv7.onrender.com/api/balances/${userId}`,
+        {
+          spending,
+          savings,
+          emergency,
+        },
+      );
       setBalances({
         spending_balance: spending,
         savings_balance: savings,
@@ -282,15 +291,18 @@ export default function Dashboard() {
         nowTime.getTime() - nowTime.getTimezoneOffset() * 60000,
       ).toISOString();
 
-      await axios.post("http://localhost:5000/api/transactions", {
-        user_id: userId,
-        amount: parseFloat(amount),
-        category_id: categoryId,
-        note,
-        transaction_date: localISOString,
-        acceptSavings,
-        acceptEmergency,
-      });
+      await axios.post(
+        "https://finance-backend-6wv7.onrender.com/api/transactions",
+        {
+          user_id: userId,
+          amount: parseFloat(amount),
+          category_id: categoryId,
+          note,
+          transaction_date: localISOString,
+          acceptSavings,
+          acceptEmergency,
+        },
+      );
 
       setAmount("");
       setNote("");
@@ -327,7 +339,9 @@ export default function Dashboard() {
   const handleDeleteTransaction = async (id) => {
     if (confirm("Bạn muốn xóa giao dịch này và hoàn tiền vào quỹ?")) {
       try {
-        await axios.delete(`http://localhost:5000/api/transactions/${id}`);
+        await axios.delete(
+          `https://finance-backend-6wv7.onrender.com/api/transactions/${id}`,
+        );
         await loadData();
       } catch (err) {
         alert("Lỗi xóa giao dịch!");
@@ -341,7 +355,9 @@ export default function Dashboard() {
     );
     if (confirmText !== "XOA") return;
     try {
-      await axios.delete(`http://localhost:5000/api/reset-data/${userId}`);
+      await axios.delete(
+        `https://finance-backend-6wv7.onrender.com/api/reset-data/${userId}`,
+      );
       localStorage.setItem("hasSetup", "false");
       window.location.href = "/setup";
     } catch (err) {
