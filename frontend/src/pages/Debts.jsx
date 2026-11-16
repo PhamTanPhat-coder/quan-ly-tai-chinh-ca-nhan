@@ -52,6 +52,12 @@ export default function Debts() {
 
   const handleAddDebt = async (e) => {
     e.preventDefault();
+
+    const cost = parseFloat(form.amount);
+    if (!cost || cost <= 0) {
+      return alert("Lỗi: Vui lòng nhập số tiền lớn hơn 0!");
+    }
+
     if (new Date(form.due_date) < new Date(form.borrowed_date)) {
       return alert("Lỗi: Ngày trả nợ không thể nhỏ hơn ngày mượn tiền!");
     }

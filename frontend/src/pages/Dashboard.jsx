@@ -15,6 +15,7 @@ export default function Dashboard() {
   const [amount, setAmount] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [note, setNote] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false); // Trạng thái khóa nút chặn spam click
 
   const [showPopup, setShowPopup] = useState(false);
   const [popupData, setPopupData] = useState({
@@ -285,6 +286,8 @@ export default function Dashboard() {
     acceptSavings = false,
     acceptEmergency = false,
   ) => {
+    if (isSubmitting) return; // Nếu đang lưu thì chặn luôn, không cho chạy tiếp
+    setIsSubmitting(true); // Khóa nút bắt đầu xử lý
     try {
       const nowTime = new Date();
       const localISOString = new Date(
@@ -333,6 +336,8 @@ export default function Dashboard() {
       } else {
         alert("Lỗi: " + (errorData?.error || err.message));
       }
+    } finally {
+      setIsSubmitting(false); // Xử lý xong (dù thành công hay lỗi) thì mở khóa nút lại
     }
   };
 
