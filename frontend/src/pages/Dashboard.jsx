@@ -23,7 +23,15 @@ export default function Dashboard() {
     fromSavings: 0,
     fromEmergency: 0,
   });
-
+  // State quản lý Modal sửa/chuyển tiền (Thay thế cho prompt)
+  const [fundModal, setFundModal] = useState({
+    isOpen: false,
+    type: "", // "edit" hoặc "transfer"
+    sourceFund: "",
+    targetFund: "",
+    fundName: "",
+    amount: "",
+  });
   // State quản lý việc hiển thị Bảng chọn Danh mục (Modal)
   const [showCategoryModal, setShowCategoryModal] = useState(false);
 
@@ -169,91 +177,130 @@ export default function Dashboard() {
   };
   // =======================================================
 
-  const handleEditFundDirectly = async (fundKey, fundTitle) => {
-    const currentVal = balances[fundKey];
-    const inputVal = prompt(`Nhập số dư mới cho [${fundTitle}]:`, currentVal);
-    if (inputVal === null || isNaN(inputVal)) return;
+  // Gọi Modal sửa số dư
+  const handleEditFundDirectly = (fundKey, fundTitle) => {
+    setFundModal({
+      isOpen: true,
+      type: "edit",
+      sourceFund: fundKey,
+      targetFund: "",
+      fundName: fundTitle,
+      amount: balances[fundKey] ? balances[fundKey].toString() : "0",
+    });
+  };
 
-    const newAmount = parseFloat(inputVal);
-    const updatedBalances = {
-      spending:
-        fundKey === "spending_balance" ? newAmount : balances.spending_balance,
-      savings:
-        fundKey === "savings_balance" ? newAmount : balances.savings_balance,
-      emergency:
-        fundKey === "emergency_balance"
-          ? newAmount
-          : balances.emergency_balance,
-    };
+  // Gọi Modal chuyển quỹ
+  const handleTransferFund = (fromFund, toFund, fundName) => {
+    setFundModal({
+      isOpen: true,
+      type: "transfer",
+      sourceFund: fromFund,
+      targetFund: toFund,
+      fundName: fundName,
+      amount: "",
+    });
+  };
+
+  // Hàm xử lý chung khi bấm "Xác nhận" trên form Modal
+  const handleSubmitFundModal = async (e) => {
+    e.preventDefault();
+    const val = parseFloat(fundModal.amount);
+    if (isNaN(val) || val < 0) return alert("Vui lòng nhập số tiền hợp lệ!");
+    if (fundModal.type === "transfer" && val <= 0)
+      return alert("Số tiền chuyển phải lớn hơn 0!");
+
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
     try {
-      const res = await axios.put(
-        `https://finance-backend-6wv7.onrender.com/api/balances/${userId}`,
-        updatedBalances,
-      );
-      if (res.data && res.data.balances) {
-        setBalances(res.data.balances);
-      } else {
+      if (fundModal.type === "edit") {
+        const updatedBalances = {
+          spending:
+            fundModal.sourceFund === "spending_balance"
+              ? val
+              : balances.spending_balance,
+          savings:
+            fundModal.sourceFund === "savings_balance"
+              ? val
+              : balances.savings_balance,
+          emergency:
+            fundModal.sourceFund === "emergency_balance"
+              ? val
+              : balances.emergency_balance,
+        };
+        const res = await axios.put(
+          `https://finance-backend-6wv7.onrender.com/api/balances/${userId}`,
+          updatedBalances,
+        );
+        if (res.data && res.data.balances) {
+          setBalances(res.data.balances);
+        } else {
+          setBalances({
+            spending_balance: updatedBalances.spending,
+            savings_balance: updatedBalances.savings,
+            emergency_balance: updatedBalances.emergency,
+          });
+        }
+      } else if (fundModal.type === "transfer") {
+        const transferAmount = val;
+        let spending = balances.spending_balance;
+        let savings = balances.savings_balance;
+        let emergency = balances.emergency_balance;
+
+        if (fundModal.sourceFund === "spending" && spending < transferAmount) {
+          setIsSubmitting(false);
+          return alert("Số dư Quỹ Chi Tiêu không đủ!");
+        }
+        if (fundModal.sourceFund === "savings" && savings < transferAmount) {
+          setIsSubmitting(false);
+          return alert("Số dư Quỹ Tiết Kiệm không đủ!");
+        }
+
+        // Trừ cộng chéo
+        if (
+          fundModal.sourceFund === "spending" &&
+          fundModal.targetFund === "savings"
+        ) {
+          spending -= transferAmount;
+          savings += transferAmount;
+        } else if (
+          fundModal.sourceFund === "spending" &&
+          fundModal.targetFund === "emergency"
+        ) {
+          spending -= transferAmount;
+          emergency += transferAmount;
+        } else if (
+          fundModal.sourceFund === "savings" &&
+          fundModal.targetFund === "spending"
+        ) {
+          savings -= transferAmount;
+          spending += transferAmount;
+        } else if (
+          fundModal.sourceFund === "savings" &&
+          fundModal.targetFund === "emergency"
+        ) {
+          savings -= transferAmount;
+          emergency += transferAmount;
+        }
+
+        await axios.put(
+          `https://finance-backend-6wv7.onrender.com/api/balances/${userId}`,
+          { spending, savings, emergency },
+        );
         setBalances({
-          spending_balance: updatedBalances.spending,
-          savings_balance: updatedBalances.savings,
-          emergency_balance: updatedBalances.emergency,
+          spending_balance: spending,
+          savings_balance: savings,
+          emergency_balance: emergency,
         });
       }
       await loadData();
+      setFundModal({ ...fundModal, isOpen: false }); // Đóng modal khi xong
     } catch (err) {
-      alert("Lỗi cập nhật: " + (err.response?.data?.error || err.message));
+      alert("Lỗi xử lý: " + (err.response?.data?.error || err.message));
+    } finally {
+      setIsSubmitting(false);
     }
   };
-
-  const handleTransferFund = async (fromFund, toFund, fundName) => {
-    const inputVal = prompt(`Nhập số tiền muốn chuyển vào [${fundName}]:`);
-    if (!inputVal || isNaN(inputVal) || Number(inputVal) <= 0) return;
-
-    const transferAmount = parseFloat(inputVal);
-    let spending = balances.spending_balance;
-    let savings = balances.savings_balance;
-    let emergency = balances.emergency_balance;
-
-    if (fromFund === "spending" && spending < transferAmount)
-      return alert("Số dư Quỹ Chi Tiêu không đủ!");
-    if (fromFund === "savings" && savings < transferAmount)
-      return alert("Số dư Quỹ Tiết Kiệm không đủ!");
-
-    if (fromFund === "spending" && toFund === "savings") {
-      spending -= transferAmount;
-      savings += transferAmount;
-    } else if (fromFund === "spending" && toFund === "emergency") {
-      spending -= transferAmount;
-      emergency += transferAmount;
-    } else if (fromFund === "savings" && toFund === "spending") {
-      savings -= transferAmount;
-      spending += transferAmount;
-    } else if (fromFund === "savings" && toFund === "emergency") {
-      savings -= transferAmount;
-      emergency += transferAmount;
-    }
-
-    try {
-      await axios.put(
-        `https://finance-backend-6wv7.onrender.com/api/balances/${userId}`,
-        {
-          spending,
-          savings,
-          emergency,
-        },
-      );
-      setBalances({
-        spending_balance: spending,
-        savings_balance: savings,
-        emergency_balance: emergency,
-      });
-      await loadData();
-    } catch (err) {
-      alert("Lỗi chuyển quỹ: " + err.message);
-    }
-  };
-
   const handlePreAddTransaction = (e) => {
     e.preventDefault();
     const val = parseFloat(amount);
@@ -525,7 +572,70 @@ export default function Dashboard() {
             </div>
           </div>
         )}
-
+        {/* ================= MODAL SỬA/CHUYỂN QUỸ (THAY THẾ PROMPT) ================= */}
+        {fundModal.isOpen && (
+          <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 z-[110] transition-opacity">
+            <div className="bg-white p-6 md:p-8 rounded-[2rem] max-w-sm w-full shadow-2xl border border-slate-100 flex flex-col">
+              <h3 className="text-xl font-black text-slate-900 mb-2">
+                {fundModal.type === "edit"
+                  ? `Cập nhật ${fundModal.fundName}`
+                  : `Chuyển vào ${fundModal.fundName}`}
+              </h3>
+              <p className="text-xs font-bold text-slate-500 mb-5">
+                {fundModal.type === "edit"
+                  ? "Nhập số dư chính xác hiện tại của quỹ:"
+                  : "Nhập số tiền bạn muốn chuyển:"}
+              </p>
+              <form onSubmit={handleSubmitFundModal} className="space-y-4">
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
+                    ₫
+                  </span>
+                  <input
+                    type="text"
+                    required
+                    autoFocus
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 pl-9 pr-4 py-3.5 rounded-2xl font-black text-slate-900 text-lg outline-none transition-all"
+                    placeholder="0"
+                    value={
+                      fundModal.amount
+                        ? Number(fundModal.amount).toLocaleString("vi-VN")
+                        : ""
+                    }
+                    onChange={(e) =>
+                      setFundModal({
+                        ...fundModal,
+                        amount: e.target.value.replace(/\D/g, ""),
+                      })
+                    }
+                  />
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFundModal({ ...fundModal, isOpen: false })
+                    }
+                    className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3.5 rounded-xl font-bold transition"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className={`flex-1 text-white py-3.5 rounded-xl font-bold transition shadow-lg ${
+                      isSubmitting
+                        ? "bg-slate-400"
+                        : "bg-blue-600 hover:bg-blue-700 shadow-blue-500/30"
+                    }`}
+                  >
+                    {isSubmitting ? "Đang xử lý..." : "Xác nhận"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
         {/* TẦNG 1 + TỔNG TÀI SẢN: 2 cột trên mobile, 4 cột trên máy tính để nằm trọn 1 hàng ngang */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
           {/* 1. Quỹ Chi Tiêu */}
